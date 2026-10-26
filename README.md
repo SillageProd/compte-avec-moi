@@ -5,7 +5,7 @@ Elle s'installe sur iPad et iPhone depuis Safari : **Partager → Sur l'écran d
 
 - Jusqu'à 6 profils, sans mot de passe.
 - Cinq jeux : 🍎 Compter, 🔢 La suite, ➕ Plus, ➖ Moins, 🎲 Mélange ; niveau « jusqu'à 5, 10, 20 ou 100 ».
-- Mode **Timer** (30 s à 5 min) et mode **Normal** (5 à 50 calculs).
+- Des séries de 5 à 50 calculs, sans chrono.
 - L'enfant répond seul en touchant la bonne réponse parmi trois ; après une erreur, la bonne réponse s'affiche en vert.
 - En touchant le cadre, l'app lit le calcul à voix haute.
 - Les résultats et le graphique des progrès (par jeu et par niveau) restent sur l'appareil.

@@ -137,28 +137,13 @@ input[type="text"], input[type="url"], textarea {
 .choix-couleurs button { width: 60px; height: 60px; border-radius: 50%; background: var(--c); border: 5px solid #fff; box-shadow: 0 0 0 3px transparent; }
 .choix-couleurs button[aria-pressed="true"] { box-shadow: 0 0 0 4px var(--encre); }
 
-/* choix du mode */
-.modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; max-width: 900px; width: 100%; margin: 0 auto; }
-.mode {
-  border-radius: 34px; padding: 26px 22px; min-height: 210px; box-shadow: var(--ombre);
-  display: grid; justify-items: center; align-content: center; gap: 10px; text-align: center;
-}
-.mode .ico { font-size: 72px; line-height: 1; }
-.mode .nom { font-size: clamp(30px, 5vw, 42px); font-weight: 700; }
-.mode .sous { font-size: 18px; font-weight: 500; opacity: .85; }
-.mode.timer { background: var(--orange); color: #fff; }
-.mode.normal { background: var(--cadre); color: #fff; }
-.mode:active { transform: translateY(4px); }
-
-/* choix du temps */
-.durees { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; max-width: 760px; width: 100%; margin: 0 auto; }
+/* choix du nombre de calculs */
+.durees { display: grid; gap: 12px; width: 100%; margin: 0 auto; }
 .duree {
   aspect-ratio: 1; max-width: 100%; border-radius: 26px; background: var(--papier); box-shadow: var(--ombre);
   display: grid; place-content: center; text-align: center; border: 5px solid transparent;
 }
-.duree b { font-size: clamp(36px, 8vw, 64px); line-height: 1; }
 .duree span { font-size: clamp(13px, 2.4vw, 18px); color: var(--encre-douce); }
-.duree[aria-pressed="true"] { border-color: var(--orange); background: #fff1e6; }
 .durees.nombres { grid-template-columns: repeat(6, minmax(0, 1fr)); max-width: 900px; }
 .nombres .duree b { font-size: clamp(26px, 5.2vw, 50px); }
 .nombres .duree[aria-pressed="true"] { border-color: var(--cadre); background: #eceeff; }
@@ -229,7 +214,6 @@ input[type="text"], input[type="url"], textarea {
 .onglets { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 .onglet { min-height: 60px; padding: 0 24px; border-radius: 20px; background: rgba(255,255,255,.6); font-size: 22px; font-weight: 600; }
 .onglet[aria-pressed="true"] { background: var(--papier); box-shadow: var(--ombre); }
-.onglet.timer[aria-pressed="true"] { color: var(--orange); }
 .onglet.normal[aria-pressed="true"] { color: var(--cadre); }
 .puces { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
 .puce { min-height: 52px; min-width: 76px; border-radius: 16px; background: rgba(255,255,255,.6); font-size: 20px; font-weight: 600; }
@@ -316,9 +300,8 @@ textarea { min-height: 150px; resize: vertical; }
 @keyframes monte { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
 #confettis { position: fixed; inset: 0; pointer-events: none; z-index: 20; }
 @media (max-width: 520px) {
-  .durees, .durees.nombres { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .durees.nombres { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .rond, .espace { width: 56px; height: 56px; }
-  .mode { min-height: 170px; }
   .grille-exos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .grille-exos .tuile { min-height: 140px; }
   .grille-exos .tuile .avatar { font-size: 48px; }
@@ -348,7 +331,7 @@ textarea { min-height: 150px; resize: vertical; }
 
   const MAX_PROFILS = 6;
   // Numéro de version (MAJEUR.MINEUR.CORRECTIF) : à augmenter à chaque mise en ligne
-  const VERSION = "1.0.0";
+  const VERSION = "1.1.0";
   let versionEnLigne = null;   // version publiée sur le site, lue dans version.json
   const ANIMAUX = ["🦁", "🐸", "🐼", "🦊", "🐰", "🐙", "🐢", "🦄", "🐶", "🐱", "🐵", "🐧", "🐨", "🐯", "🦖", "🐝"];
   const COULEURS = ["#f2545b", "#ff8a3d", "#ffb627", "#22b573", "#3aa8e0", "#7176d6", "#d465c2"];
@@ -378,7 +361,6 @@ textarea { min-height: 150px; resize: vertical; }
   let ecran = "profils";
   let profil = null;             // profil sélectionné
   let brouillon = null;          // profil en création
-  let dureeChoisie = lire("duree", 2);
   let nombreChoisi = lire("nombre", 10);
   let partie = null;
   let fin = null;                // résultat affiché à la fin
@@ -397,9 +379,6 @@ textarea { min-height: 150px; resize: vertical; }
     return m + " min" + (r ? " " + String(r).padStart(2, "0") + " s" : "");
   };
   const dateCourte = iso => { const d = new Date(iso); return String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0"); };
-  const DUREES = [0.5, 1, 2, 3, 4, 5];
-  const minutes = n => n < 1 ? Math.round(n * 60) + " secondes" : n + " minute" + (n > 1 ? "s" : "");
-  const dureeCourte = n => n < 1 ? Math.round(n * 60) + " s" : n + " min";
   const NOMBRES = [5, 10, 15, 20, 30, 50];
   const calculs = n => n + " calcul" + (n > 1 ? "s" : "");
   const choixDe = p => ({ exo: "plus", niveau: 10, ...(choix[p.id] || {}) });
@@ -588,8 +567,8 @@ textarea { min-height: 150px; resize: vertical; }
   }
 
   // ---------- résultats ----------
-  // variante : la durée en Timer, le nombre de calculs en Normal ; toujours pour un calcul et un niveau donnés
-  const varianteDe = r => (r.mode === "timer" ? r.duree : r.nombre) + "|" + r.exo + "|" + r.niveau;
+  // variante : le nombre de calculs, pour un calcul et un niveau donnés
+  const varianteDe = r => r.nombre + "|" + r.exo + "|" + r.niveau;
   const resultatsDe = (pid, f) => resultats.filter(r => r.profil === pid && Object.keys(f).every(k => f[k] == null || r[k] === f[k]));
   const taux = r => r.total ? r.justes / r.total : 0;
 
@@ -629,12 +608,10 @@ textarea { min-height: 150px; resize: vertical; }
     return d;
   }
   // ---------- tri des résultats ----------
-  // Chaque jour à 6 h : on ne garde que le meilleur résultat de la veille (par enfant, mode, durée ou nombre, calcul et niveau).
+  // Chaque jour à 6 h : on ne garde que le meilleur résultat de la veille (par enfant, nombre de calculs, calcul et niveau).
   // Le 1er du mois à 6 h : on ne garde que les 5 meilleurs résultats du mois précédent.
   // La règle ne dépend que des résultats eux-mêmes : tous les appareils arrivent au même tri.
-  const meilleurDabord = (a, b) => a.mode === "timer"
-    ? (b.justes - a.justes) || (a.faux - b.faux) || (a.date < b.date ? -1 : 1)
-    : (taux(b) - taux(a)) || (a.tempsMs - b.tempsMs) || (a.date < b.date ? -1 : 1);
+  const meilleurDabord = (a, b) => (taux(b) - taux(a)) || (a.tempsMs - b.tempsMs) || (a.date < b.date ? -1 : 1);
   function compacter(liste, maintenant) {
     const now = maintenant || new Date();
     const finDuJour = d => new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, 6);   // lendemain 6 h
@@ -696,7 +673,7 @@ textarea { min-height: 150px; resize: vertical; }
       ecrire("etatSynchro", etatSynchro);
       synchroEnCours = false;
       if (!profil && !["profils", "parents", "porte", "nouveau"].includes(ecran)) aller("profils");
-      else if (["profils", "parents", "progres", "calculs", "modes"].includes(ecran)) afficher();
+      else if (["profils", "parents", "progres", "calculs"].includes(ecran)) afficher();
       if (synchroRelance) { synchroRelance = false; synchroniser(); }
     }
   }
@@ -759,34 +736,14 @@ textarea { min-height: 150px; resize: vertical; }
       </div>`;
   }
 
-  function vueModes() {
+  function vueNormal() {
+    if (!NOMBRES.includes(nombreChoisi)) nombreChoisi = 10;
     const c = choixDe(profil);
+    const btns = NOMBRES.map(n => `<button class="duree" data-a="nombre" data-v="${n}" aria-pressed="${n === nombreChoisi}"><b>${n}</b><span>calculs</span></button>`).join("");
     return `
       ${barre(retour("versCalculs"), `<h2>${libelleCalcul(c.exo, c.niveau)}</h2>`, avatarProfil(profil))}
       <div class="centre">
-        <div class="modes">
-          <button class="mode timer" data-a="versTimer"><span class="ico">⏱️</span><span class="nom">Timer</span><span class="sous">Course contre la montre</span></button>
-          <button class="mode normal" data-a="versNormal"><span class="ico">✏️</span><span class="nom">Normal</span><span class="sous">Une série de calculs, sans se presser</span></button>
-        </div>
-      </div>`;
-  }
-
-  function vueTimer() {
-    const btns = DUREES.map(n => `<button class="duree" data-a="duree" data-v="${n}" aria-pressed="${n === dureeChoisie}"><b>${n < 1 ? Math.round(n * 60) : n}</b><span>${n < 1 ? "sec" : "min"}</span></button>`).join("");
-    return `
-      ${barre(retour("versModes"), `<h2>Combien de temps ?</h2>`, avatarProfil(profil))}
-      <div class="centre">
-        <div class="durees">${btns}</div>
-        <div class="bas"><button class="gros vert" data-a="lancerTimer" style="min-width:260px">▶ Start</button></div>
-      </div>`;
-  }
-
-  function vueNormal() {
-    if (!NOMBRES.includes(nombreChoisi)) nombreChoisi = 10;
-    const btns = NOMBRES.map(n => `<button class="duree" data-a="nombre" data-v="${n}" aria-pressed="${n === nombreChoisi}"><b>${n}</b><span>calculs</span></button>`).join("");
-    return `
-      ${barre(retour("versModes"), `<h2>Combien de calculs ?</h2>`, avatarProfil(profil))}
-      <div class="centre">
+        <div class="entete"><h1>Combien de calculs ?</h1></div>
         <div class="durees nombres">${btns}</div>
         <div class="bas"><button class="gros vert" data-a="lancerNormal" style="min-width:260px">▶ Start</button></div>
       </div>`;
@@ -794,9 +751,7 @@ textarea { min-height: 150px; resize: vertical; }
 
   function vueJeu() {
     const p = partie;
-    const pastille = p.mode === "timer"
-      ? `<span class="pastille" id="chrono">⏱️ <span id="chronoTxt">${mmss(p.duree * 60000)}</span></span>`
-      : `<span class="pastille"><span id="compteur">${p.index + 1} / ${p.total}</span></span>`;
+    const pastille = `<span class="pastille"><span id="compteur">${p.index + 1} / ${p.total}</span></span>`;
     return `
       <div class="jeu">
         ${barre(`<button class="rond" data-a="arreter" id="btnArreter" aria-label="Arrêter">✖️</button>`, pastille, avatarProfil(profil))}
@@ -808,22 +763,6 @@ textarea { min-height: 150px; resize: vertical; }
   function vueFin() {
     const r = fin.resultat, prec = fin.precedent;
     let medaille = "⭐", message = "", classe = "";
-    if (r.mode === "timer") {
-      if (!prec) message = `C'est ton premier score en ${minutes(r.duree)} !`;
-      else if (r.justes > prec.justes) { message = `Tu as fait mieux que la dernière fois (${prec.justes}) !`; classe = "mieux"; medaille = "🏆"; }
-      else if (r.justes === prec.justes) message = `Pareil que la dernière fois (${prec.justes}). Bien joué !`;
-      else message = `La dernière fois, tu en avais ${prec.justes}. Tu vas y arriver !`;
-      return `
-        <div class="fin">
-          <div class="medaille">${medaille}</div>
-          <h1 class="bravo">Bravo ${esc(profil.nom)} !</h1>
-          ${fin.record ? `<span class="badge">Nouveau record !</span>` : ""}
-          <div class="score-grand">${r.justes}</div>
-          <div class="score-legende">calcul${r.justes > 1 ? "s" : ""} juste${r.justes > 1 ? "s" : ""} en ${minutes(r.duree)}</div>
-          <div class="message ${classe}">${message}</div>
-          <div class="actions"><button class="gros vert" data-a="lancerTimer">🔁 Rejouer</button><button class="gros blanc" data-a="versCalculs">🏠 Menu</button></div>
-        </div>`;
-    }
     const morceaux = [];
     if (!prec) message = `C'est ta première série de ${calculs(r.nombre)} !`;
     else {
@@ -874,33 +813,21 @@ textarea { min-height: 150px; resize: vertical; }
 
   function vueProgres() {
     const v = etatProgres;
-    // Par défaut on montre le mode, le calcul, le niveau, la durée et le nombre de la dernière partie jouée
+    // Par défaut on montre le calcul, le niveau et le nombre de calculs de la dernière partie jouée
     const tous = resultats.filter(r => r.profil === profil.id);
     const dernier = tous[tous.length - 1], c = choixDe(profil);
-    if (v.mode == null) v.mode = dernier ? dernier.mode : "timer";
     if (v.exo == null) v.exo = dernier ? dernier.exo : c.exo;
     if (v.niveau == null) v.niveau = dernier ? dernier.niveau : c.niveau;
     const base = { exo: v.exo, niveau: v.niveau };
-    const dernierDe = mode => { const l = resultatsDe(profil.id, { ...base, mode }); return l[l.length - 1]; };
-    if (v.duree == null) v.duree = dernierDe("timer") ? dernierDe("timer").duree : dureeChoisie;
-    if (v.nombre == null) v.nombre = dernierDe("normal") ? dernierDe("normal").nombre : nombreChoisi;
+    const derniers = resultatsDe(profil.id, base), dernierIci = derniers[derniers.length - 1];
+    if (v.nombre == null) v.nombre = dernierIci ? dernierIci.nombre : nombreChoisi;
     const avecNombre = (label, n) => n ? `${label} <small>(${n})</small>` : label;
     const pucesExo = EXOS.map(e => `<button class="puce exo" style="--c:${e.c}" data-a="progresExo" data-v="${e.id}" aria-pressed="${e.id === v.exo}">${avecNombre(e.ico + " " + e.nom, resultatsDe(profil.id, { exo: e.id, niveau: v.niveau }).length)}</button>`).join("");
     const pucesNiveau = NIVEAUX.map(n => `<button class="puce normal" data-a="progresNiveau" data-v="${n}" aria-pressed="${n === v.niveau}">${avecNombre("jusqu'à " + n, resultatsDe(profil.id, { exo: v.exo, niveau: n }).length)}</button>`).join("");
     let contenu = "";
-    if (v.mode === "timer") {
-      const liste = resultatsDe(profil.id, { ...base, mode: "timer", duree: v.duree });
-      const puces = DUREES.map(n => `<button class="puce" data-a="progresDuree" data-v="${n}" aria-pressed="${n === v.duree}">${avecNombre(dureeCourte(n), resultatsDe(profil.id, { ...base, mode: "timer", duree: n }).length)}</button>`).join("");
-      const meilleur = liste.reduce((m, r) => Math.max(m, r.justes), 0);
-      let rec = -1;
-      const points = liste.map(r => { const p = { valeur: r.justes, etiquette: r.justes, date: dateCourte(r.date), record: r.justes > rec && r.justes === meilleur }; if (p.record) rec = r.justes; return p; });
-      contenu = `<div class="puces">${puces}</div>` + (liste.length
-        ? `<div class="resume"><div class="case v"><b>${meilleur}</b><span>record en ${dureeCourte(v.duree)}</span></div><div class="case t"><b>${liste.length}</b><span>partie${liste.length > 1 ? "s" : ""}</span></div></div>
-           <div class="graphe">${grapheBarres(points, { max: 5, titre: "Calculs justes en " + minutes(v.duree) })}</div>`
-        : `<div class="graphe"><div class="vide"><span class="ico">⏱️</span>Pas encore de partie en ${minutes(v.duree)}.<br>Lance un Timer pour voir ton score ici !</div></div>`);
-    } else {
-      const pucesN = NOMBRES.map(n => `<button class="puce normal" data-a="progresNombre" data-v="${n}" aria-pressed="${n === v.nombre}">${avecNombre(String(n), resultatsDe(profil.id, { ...base, mode: "normal", nombre: n }).length)}</button>`).join("");
-      const liste = resultatsDe(profil.id, { ...base, mode: "normal", nombre: v.nombre });
+    {
+      const pucesN = NOMBRES.map(n => `<button class="puce normal" data-a="progresNombre" data-v="${n}" aria-pressed="${n === v.nombre}">${avecNombre(String(n), resultatsDe(profil.id, { ...base, nombre: n }).length)}</button>`).join("");
+      const liste = resultatsDe(profil.id, { ...base, nombre: v.nombre });
       const meilleur = liste.reduce((m, r) => Math.max(m, Math.round(taux(r) * 100)), 0);
       let rec = -1;
       const points = liste.map(r => { const pc = Math.round(taux(r) * 100); const p = { valeur: pc, etiquette: pc + "%", date: dateCourte(r.date), sous: "⏱ " + mmss(r.tempsMs), record: pc > rec && pc === meilleur }; if (p.record) rec = pc; return p; });
@@ -915,10 +842,6 @@ textarea { min-height: 150px; resize: vertical; }
       <div class="parents" style="padding-top:12px">
         <div class="puces">${pucesExo}</div>
         <div class="puces">${pucesNiveau}</div>
-        <div class="onglets">
-          <button class="onglet timer" data-a="progresMode" data-v="timer" aria-pressed="${v.mode === "timer"}">⏱️ ${avecNombre("Timer", resultatsDe(profil.id, { ...base, mode: "timer" }).length)}</button>
-          <button class="onglet normal" data-a="progresMode" data-v="normal" aria-pressed="${v.mode === "normal"}">✏️ ${avecNombre("Normal", resultatsDe(profil.id, { ...base, mode: "normal" }).length)}</button>
-        </div>
         ${contenu}
       </div>`;
   }
@@ -1000,7 +923,7 @@ textarea { min-height: 150px; resize: vertical; }
 
   // ---------- rendu ----------
   function afficher() {
-    const vues = { profils: vueProfils, nouveau: vueNouveauProfil, calculs: vueCalculs, modes: vueModes, timer: vueTimer, normal: vueNormal, jeu: vueJeu, fin: vueFin, progres: vueProgres, porte: vuePorte, parents: vueParents };
+    const vues = { profils: vueProfils, nouveau: vueNouveauProfil, calculs: vueCalculs, normal: vueNormal, jeu: vueJeu, fin: vueFin, progres: vueProgres, porte: vuePorte, parents: vueParents };
     app.innerHTML = vues[ecran]();
     if (ecran === "jeu") montrerCalcul();
     if (ecran === "progres") { const g = app.querySelector(".graphe"); if (g) g.scrollLeft = g.scrollWidth; }
@@ -1017,23 +940,15 @@ textarea { min-height: 150px; resize: vertical; }
   async function garderEcranAllume() { try { verrou = await navigator.wakeLock.request("screen"); } catch (e) {} }
   function lacherEcran() { try { verrou && verrou.release(); } catch (e) {} verrou = null; }
 
-  function demarrer(mode) {
+  function demarrer() {
     const c = choixDe(profil);
     partie = {
-      mode, duree: mode === "timer" ? dureeChoisie : null, nombre: mode === "normal" ? nombreChoisi : null,
-      exo: c.exo, niveau: c.niveau, recents: [], index: 0, total: mode === "normal" ? nombreChoisi : null, q: null,
-      justes: 0, faux: 0, debut: Date.now(), occupe: false, minuteur: null, arretArme: false
+      nombre: nombreChoisi, exo: c.exo, niveau: c.niveau, recents: [], index: 0, total: nombreChoisi, q: null,
+      justes: 0, faux: 0, debut: Date.now(), occupe: false, arretArme: false
     };
     partie.q = calculSuivant(partie);
     aller("jeu");
     garderEcranAllume();
-    if (mode === "timer") partie.minuteur = setInterval(tic, 200);
-  }
-  function tic() {
-    const reste = partie.duree * 60000 - (Date.now() - partie.debut);
-    const el = document.getElementById("chronoTxt");
-    if (el) { el.textContent = mmss(reste); document.getElementById("chrono").classList.toggle("urgent", reste <= 10000); }
-    if (reste <= 0) terminer();
   }
   // le cadre garde toujours la même taille : on ajuste seulement la taille de son contenu
   function tailleCalcul(el, q) {
@@ -1072,30 +987,29 @@ textarea { min-height: 150px; resize: vertical; }
       if (!partie) return;
       v.innerHTML = ""; partie.occupe = false;
       partie.index++;
-      if (partie.mode === "normal" && partie.index >= partie.total) return terminer();
+      if (partie.index >= partie.total) return terminer();
       partie.q = calculSuivant(partie);
       montrerCalcul();
     }, juste ? 650 : 1400);
   }
   function terminer() {
     if (!partie) return;
-    clearInterval(partie.minuteur); lacherEcran();
+    lacherEcran();
     const p = partie; partie = null;
-    const tempsMs = p.mode === "timer" ? p.duree * 60000 : Date.now() - p.debut;
-    const r = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), profil: profil.id, mode: p.mode, duree: p.duree, nombre: p.nombre, exo: p.exo, niveau: p.niveau, justes: p.justes, faux: p.faux, total: p.justes + p.faux, tempsMs, date: new Date().toISOString() };
-    const anciens = resultatsDe(profil.id, { mode: p.mode, exo: p.exo, niveau: p.niveau, duree: p.duree, nombre: p.nombre });
+    const tempsMs = Date.now() - p.debut;
+    const r = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), profil: profil.id, mode: "normal", duree: null, nombre: p.nombre, exo: p.exo, niveau: p.niveau, justes: p.justes, faux: p.faux, total: p.justes + p.faux, tempsMs, date: new Date().toISOString() };
+    const anciens = resultatsDe(profil.id, { exo: p.exo, niveau: p.niveau, nombre: p.nombre });
     const precedent = anciens[anciens.length - 1] || null;
     const record = anciens.length > 0 && [...anciens, r].sort(meilleurDabord)[0] === r;
     resultats.push(r); sauverResultats(); synchroniser();
     fin = { resultat: r, precedent, record };
     aller("fin");
-    const mieux = precedent && (p.mode === "timer" ? r.justes > precedent.justes : (taux(r) > taux(precedent) || (taux(r) === taux(precedent) && r.tempsMs < precedent.tempsMs - 1000)));
+    const mieux = precedent && (taux(r) > taux(precedent) || (taux(r) === taux(precedent) && r.tempsMs < precedent.tempsMs - 1000));
     const nom = profil.nom, pc = Math.round(taux(r) * 100);
-    const valeur = p.mode === "timer" ? { valeur: r.justes, legende: r.justes > 1 ? "calculs justes" : "calcul juste" } : { valeur: pc, suffixe: " %", legende: "de bonnes réponses" };
+    const valeur = { valeur: pc, suffixe: " %", legende: "de bonnes réponses" };
     let delta = "";
     if (precedent && mieux) {
-      if (p.mode === "timer") { const d = r.justes - precedent.justes; delta = "+" + d + (d > 1 ? " calculs" : " calcul") + " par rapport à la dernière fois"; }
-      else if (pc > Math.round(taux(precedent) * 100)) delta = "+" + (pc - Math.round(taux(precedent) * 100)) + " % de bonnes réponses";
+      if (pc > Math.round(taux(precedent) * 100)) delta = "+" + (pc - Math.round(taux(precedent) * 100)) + " % de bonnes réponses";
       else delta = tempsEnMots(precedent.tempsMs - r.tempsMs) + " plus rapide !";
     }
     if (record) grandeFete({ emoji: "🏆", titre: "Nouveau record !", sous: nom + ", tu n'as jamais fait aussi bien. Tu es une vraie star !", delta, parole: "Bravo " + nom + " ! Nouveau record !", ...valeur });
@@ -1111,7 +1025,7 @@ textarea { min-height: 150px; resize: vertical; }
       setTimeout(() => { if (partie && partie.arretArme) { partie.arretArme = false; b.textContent = "✖️"; b.style.fontSize = ""; b.style.background = ""; } }, 2500);
       return;
     }
-    clearInterval(partie.minuteur); lacherEcran(); partie = null; aller("modes");
+    lacherEcran(); partie = null; aller("normal");
   }
 
   // ---------- actions ----------
@@ -1134,23 +1048,16 @@ textarea { min-height: 150px; resize: vertical; }
     },
     versCalculs() { aller("calculs"); },
     niveau(el) { changerChoix({ niveau: Number(el.dataset.v) }); afficher(); },
-    choisirExo(el) { changerChoix({ exo: el.dataset.v }); aller("modes"); },
-    versModes() { aller("modes"); },
-    versTimer() { aller("timer"); },
-    duree(el) { dureeChoisie = Number(el.dataset.v); ecrire("duree", dureeChoisie); afficher(); },
-    lancerTimer() { demarrer("timer"); },
-    versNormal() { aller("normal"); },
+    choisirExo(el) { changerChoix({ exo: el.dataset.v }); aller("normal"); },
     nombre(el) { nombreChoisi = Number(el.dataset.v); ecrire("nombre", nombreChoisi); afficher(); },
-    lancerNormal() { demarrer("normal"); },
+    lancerNormal() { demarrer(); },
     repondre(el) { repondre(Number(el.dataset.v)); },
     ecouter() { if (partie) dire(partie.q.parole); },
     arreter,
     versProgres() { etatProgres = {}; aller("progres"); },
-    progresMode(el) { etatProgres.mode = el.dataset.v; afficher(); },
-    progresExo(el) { etatProgres = { mode: etatProgres.mode, exo: el.dataset.v, niveau: etatProgres.niveau }; afficher(); },
-    progresNiveau(el) { etatProgres = { mode: etatProgres.mode, exo: etatProgres.exo, niveau: Number(el.dataset.v) }; afficher(); },
+    progresExo(el) { etatProgres = { exo: el.dataset.v, niveau: etatProgres.niveau }; afficher(); },
+    progresNiveau(el) { etatProgres = { exo: etatProgres.exo, niveau: Number(el.dataset.v) }; afficher(); },
     progresNombre(el) { etatProgres.nombre = Number(el.dataset.v); afficher(); },
-    progresDuree(el) { etatProgres.duree = Number(el.dataset.v); afficher(); },
     ouvrirPorte() {
       const a = 2 + Math.floor(Math.random() * 7), b = 3 + Math.floor(Math.random() * 6), bon = a * b;
       const choix = new Set([bon]); while (choix.size < 3) choix.add(bon + (Math.floor(Math.random() * 11) - 5) || bon + 7);
