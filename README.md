@@ -24,5 +24,5 @@ Elle est produite par `build.py` à partir du même code : chaque changement s'a
 ## Synchroniser l'iPad et l'iPhone
 
 Comme pour « Lis avec moi », avec un petit script Google (`source/synchro.gs`, aussi sur le site : `synchro.gs.txt`)
-installé dans un **nouveau** Google Sheet privé (pas celui de « Lis avec moi »).
+qui peut écrire dans le même Google Sheet que « Lis avec moi » : ses données vont dans des onglets séparés « Maths - Profils », « Maths - Resultats » et « Maths - Supprimes ».
 Les étapes sont expliquées dans **Espace parents → Synchroniser l'iPad et l'iPhone**.

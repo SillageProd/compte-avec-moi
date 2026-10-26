@@ -1,4 +1,11 @@
-/* Compte avec moi - synchronisation des profils et des resultats entre l'iPad et l'iPhone. A coller dans Extensions > Apps Script d'un Google Sheet, en remplacant tout le contenu. */
+/* Compte avec moi - synchronisation des profils et des resultats entre l'iPad et l'iPhone.
+   A coller dans un nouveau projet sur script.google.com, en remplacant tout le contenu.
+   Les donnees vont dans leurs propres onglets ("Maths - ...") : celles de Lis avec moi ne sont jamais touchees. */
+
+// Lien du Google Sheet a utiliser (par exemple celui de Lis avec moi), entre les guillemets.
+// Laisser vide si ce code est colle dans Extensions > Apps Script du Google Sheet lui-meme.
+var LIEN_SHEET = "";
+var PREFIXE = "Maths - ";
 
 var ONGLETS = {
   Profils: ["id", "nom", "animal", "couleur"],
@@ -7,10 +14,10 @@ var ONGLETS = {
 };
 
 function feuille(nom) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var f = ss.getSheetByName(nom);
+  var ss = LIEN_SHEET ? SpreadsheetApp.openByUrl(LIEN_SHEET) : SpreadsheetApp.getActiveSpreadsheet();
+  var f = ss.getSheetByName(PREFIXE + nom);
   if (!f) {
-    f = ss.insertSheet(nom);
+    f = ss.insertSheet(PREFIXE + nom);
     f.getRange("A:Z").setNumberFormat("@");
     f.appendRow(ONGLETS[nom]);
   }

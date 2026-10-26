@@ -2,6 +2,7 @@
 
 Numérotation MAJEUR.MINEUR.CORRECTIF : MINEUR pour une nouveauté, CORRECTIF pour une correction.
 
+- **1.7.0** — Synchronisation : peut utiliser le même Google Sheet que Lis avec moi, dans des onglets séparés « Maths - … ».
 - **1.6.0** — Édition néerlandaise « Tel met mij » (adresse /nl/) pour les autres parents : entièrement en néerlandais, voix néerlandaise, sans synchronisation.
 - **1.5.0** — Compter propose aussi des dominos (compter les points noirs) ; le jeu Mélange revient avec un peu de tout : compter, la suite, plus et moins, le bon signe.
 - **1.4.0** — Plus et Moins réunis en un seul jeu « Plus et moins » (additions et soustractions mélangées) ; quatre jeux en tout. « Plus ou moins ? » devient « Le bon signe ».

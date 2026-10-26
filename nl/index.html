@@ -343,7 +343,7 @@ textarea { min-height: 150px; resize: vertical; }
 
   const MAX_PROFILS = 6;
   // Numéro de version (MAJEUR.MINEUR.CORRECTIF) : à augmenter à chaque mise en ligne
-  const VERSION = "1.6.0";
+  const VERSION = "1.7.0";
   let versionEnLigne = null;   // version publiée sur le site, lue dans version.json
   const ANIMAUX = ["🦁", "🐸", "🐼", "🦊", "🐰", "🐙", "🐢", "🦄", "🐶", "🐱", "🐵", "🐧", "🐨", "🐯", "🦖", "🐝"];
   const COULEURS = ["#f2545b", "#ff8a3d", "#ffb627", "#22b573", "#3aa8e0", "#7176d6", "#d465c2"];
@@ -940,10 +940,10 @@ textarea { min-height: 150px; resize: vertical; }
             <p class="aide">Les profils et les résultats sont partagés avec tous les appareils connectés au même lien.</p>
             <div class="ligne"><button class="gros bleu petit" data-a="synchroMaintenant">🔄 Synchroniser maintenant</button><button class="btn-danger" data-a="deconnecterSynchro">Déconnecter</button></div>`
           : `
-            <p class="aide">Pour retrouver les mêmes profils et progrès sur tous vos appareils (5 minutes, une seule fois, de préférence sur un ordinateur) :</p>
+            <p class="aide">Pour retrouver les mêmes profils et progrès sur tous vos appareils (5 minutes, une seule fois, de préférence sur un ordinateur). Vous pouvez utiliser le même Google Sheet que « Lis avec moi » : les données de Compte avec moi vont dans leurs propres onglets (« Maths - Profils », « Maths - Resultats », « Maths - Supprimes ») et celles de Lis avec moi ne sont pas touchées.</p>
             <ol class="aide">
-              <li>Créez un nouveau Google Sheet, par exemple « Compte avec moi – résultats » (pas celui de « Lis avec moi »).</li>
-              <li>Menu <b>Extensions → Apps Script</b>. Effacez le contenu et collez le code ci-dessous.</li>
+              <li>Allez sur <b>script.google.com</b> et créez un <b>Nouveau projet</b>, par exemple « Compte avec moi – synchro ».</li>
+              <li>Effacez le contenu et collez le code ci-dessous. Sur la ligne <b>LIEN_SHEET</b>, collez le lien de votre Google Sheet entre les guillemets.</li>
               <li><b>Déployer → Nouveau déploiement</b>, type <b>Application Web</b>. « Exécuter en tant que » : <b>Moi</b>, « Qui a accès » : <b>Tout le monde</b>. Cliquez sur Déployer et autorisez l'accès.</li>
               <li>Copiez l'<b>URL de l'application Web</b> (elle finit par /exec) et collez-la ici, sur chaque appareil.</li>
             </ol>
