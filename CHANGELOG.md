@@ -2,6 +2,7 @@
 
 Numérotation MAJEUR.MINEUR.CORRECTIF : MINEUR pour une nouveauté, CORRECTIF pour une correction.
 
+- **1.8.0** — Nouveau jeu « Comparer » (FR et NL) : deux nombres ou deux dominos, l'enfant choisit < (plus petit), = (égal) ou > (plus grand) ; aussi dans Mélange.
 - **1.7.0** — Synchronisation : peut utiliser le même Google Sheet que Lis avec moi, dans des onglets séparés « Maths - … ».
 - **1.6.0** — Édition néerlandaise « Tel met mij » (adresse /nl/) pour les autres parents : entièrement en néerlandais, voix néerlandaise, sans synchronisation.
 - **1.5.0** — Compter propose aussi des dominos (compter les points noirs) ; le jeu Mélange revient avec un peu de tout : compter, la suite, plus et moins, le bon signe.

@@ -182,6 +182,10 @@ input[type="text"], input[type="url"], textarea {
 .domino .moitie { width: 2em; height: 2em; padding: .2em; box-sizing: border-box; display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); }
 .domino .moitie + .moitie { border-left: .06em solid #2f3433; }
 .domino .pt { width: .4em; height: .4em; border-radius: 50%; background: #1b1d22; place-self: center; }
+.domino.debout { flex-direction: column; }
+.domino.debout .moitie + .moitie { border-left: 0; border-top: .06em solid #2f3433; }
+.comparaison { display: inline-flex; align-items: center; gap: .45em; }
+.comparaison .trou { font-size: 1.5em; text-align: center; }
 .verdict { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
 .verdict span { font-size: clamp(120px, 26vw, 260px); font-weight: 700; line-height: 1; animation: tampon .45s ease-out forwards; }
 .verdict.ok span { color: var(--vrai); }
@@ -196,6 +200,7 @@ input[type="text"], input[type="url"], textarea {
   background: var(--papier); border: 6px solid var(--cadre); box-shadow: 0 8px 0 rgba(36,48,87,.22);
 }
 .rep:active { transform: translateY(6px); box-shadow: 0 2px 0 rgba(36,48,87,.22); }
+.rep small { display: block; font-family: var(--f-titre); font-size: clamp(14px, 2.6vw, 21px); font-weight: 600; margin-top: .25em; line-height: 1.1; }
 .rep.v { background: var(--vrai); border-color: var(--vrai); color: #fff; box-shadow: 0 8px 0 var(--vrai-fonce); }
 .rep.x { background: var(--faux); border-color: var(--faux); color: #fff; box-shadow: 0 8px 0 var(--faux-fonce); }
 
@@ -343,7 +348,7 @@ textarea { min-height: 150px; resize: vertical; }
 
   const MAX_PROFILS = 6;
   // Numéro de version (MAJEUR.MINEUR.CORRECTIF) : à augmenter à chaque mise en ligne
-  const VERSION = "1.7.0";
+  const VERSION = "1.8.0";
   let versionEnLigne = null;   // version publiée sur le site, lue dans version.json
   const ANIMAUX = ["🦁", "🐸", "🐼", "🦊", "🐰", "🐙", "🐢", "🦄", "🐶", "🐱", "🐵", "🐧", "🐨", "🐯", "🦖", "🐝"];
   const COULEURS = ["#f2545b", "#ff8a3d", "#ffb627", "#22b573", "#3aa8e0", "#7176d6", "#d465c2"];
@@ -354,6 +359,7 @@ textarea { min-height: 150px; resize: vertical; }
     { id: "suite", ico: "🔢", nom: L("La suite", "De rij"), sous: L("Quel nombre manque\u00a0?", "Welk getal ontbreekt?"), c: "#3aa8e0" },
     { id: "plusmoins", ico: "🧮", nom: L("Plus et moins", "Plus en min"), sous: L("Additions et soustractions", "Optellen en aftrekken"), c: "#7176d6" },
     { id: "signe", ico: "🤔", nom: L("Le bon signe", "Het juiste teken"), sous: L("Plus ou moins\u00a0?", "Plus of min?"), c: "#22b573" },
+    { id: "comparer", ico: "⚖️", nom: L("Comparer", "Vergelijken"), sous: L("Plus petit, plus grand ou égal\u00a0?", "Kleiner, groter of gelijk?"), c: "#d465c2" },
     { id: "melange", ico: "🎲", nom: L("Mélange", "Mix"), sous: L("Un peu de tout", "Van alles wat"), c: "#ffb627" }
   ];
   const exoDe = id => EXOS.find(e => e.id === id) || EXOS[2];
@@ -537,9 +543,20 @@ textarea { min-height: 150px; resize: vertical; }
   // ---------- fabrique de calculs ----------
   // Chaque calcul : ce qu'on montre, ce qu'on dit, la bonne réponse et les réponses au choix (trois, ou + et − pour « signe »).
   function nouveauCalcul(exo, niveau) {
-    if (exo === "melange") exo = ["compter", "suite", "plusmoins", "signe"][hasard(0, 3)];
+    if (exo === "melange") exo = ["compter", "suite", "plusmoins", "signe", "comparer"][hasard(0, 4)];
     if (exo === "plusmoins") exo = hasard(0, 1) ? "plus" : "moins";
     let q;
+    if (exo === "comparer") {
+      // deux nombres (ou deux dominos, 12 points au plus) : l'enfant choisit <, = ou > ; « égal » environ une fois sur quatre
+      const avecDominos = hasard(0, 9) < 4, min = avecDominos ? 1 : 0, max = avecDominos ? Math.min(niveau, 12) : niveau;
+      const a = hasard(min, max), b = hasard(0, 3) ? hasard(min, max) : a;
+      const moities = n => { const g = hasard(Math.max(0, n - 6), Math.min(6, n)); return [g, n - g]; };
+      return {
+        exo, a, b, rep: a < b ? "<" : a > b ? ">" : "=", dominos: avecDominos ? [moities(a), moities(b)] : null,
+        choix: ["<", "=", ">"], legendes: [L("plus petit", "kleiner"), L("égal", "gelijk"), L("plus grand", "groter")],
+        parole: L("Plus petit, plus grand ou égal ? ", "Kleiner, groter of gelijk? ") + (avecDominos ? "" : a + " … " + b), cle: (avecDominos ? "kd" : "k") + a + "-" + b
+      };
+    }
     if (exo === "signe") {
       // deux nombres et le résultat : l'enfant choisit + ou −
       const c = nouveauCalcul(hasard(0, 1) ? "plus" : "moins", niveau);
@@ -578,10 +595,13 @@ textarea { min-height: 150px; resize: vertical; }
   // Le contenu du cadre ; « reponse » remplit le trou une fois que l'enfant a répondu
   function dessinCalcul(q, reponse) {
     const trou = reponse == null ? `<span class="trou">?</span>` : `<span class="trou ok">${q.rep}</span>`;
-    if (q.domino) {
-      const PIPS = [[], [5], [1, 9], [1, 5, 9], [1, 3, 7, 9], [1, 3, 5, 7, 9], [1, 3, 4, 6, 7, 9]];
-      const moitie = k => `<span class="moitie">${PIPS[k].map(c => `<span class="pt" style="grid-area:${Math.ceil(c / 3)} / ${(c - 1) % 3 + 1}"></span>`).join("")}</span>`;
-      return { html: `<span class="domino">${q.domino.map(moitie).join("")}</span>` };
+    const PIPS = [[], [5], [1, 9], [1, 5, 9], [1, 3, 7, 9], [1, 3, 5, 7, 9], [1, 3, 4, 6, 7, 9]];
+    const moitie = k => `<span class="moitie">${PIPS[k].map(c => `<span class="pt" style="grid-area:${Math.ceil(c / 3)} / ${(c - 1) % 3 + 1}"></span>`).join("")}</span>`;
+    const domino = (moities, debout) => `<span class="domino${debout ? " debout" : ""}">${moities.map(moitie).join("")}</span>`;
+    if (q.domino) return { html: domino(q.domino) };
+    if (q.exo === "comparer") {
+      if (q.dominos) return { html: `<span class="comparaison">${domino(q.dominos[0], true)}${trou}${domino(q.dominos[1], true)}</span>` };
+      return { html: `${q.a} ${trou} ${q.b}`, texte: `${q.a} = ${q.b}` };
     }
     if (q.exo === "compter") {
       const blocs = [];
@@ -910,7 +930,8 @@ textarea { min-height: 150px; resize: vertical; }
             <li><b>🔢 De rij</b>: het ontbrekende getal vinden (3, 4, ?).</li>
             <li><b>🧮 Plus en min</b>: optellen en aftrekken door elkaar; de uitkomst is nooit groter dan het gekozen niveau en nooit kleiner dan nul.</li>
             <li><b>🤔 Het juiste teken</b>: twee getallen en de uitkomst (7 ? 3 = 4), het kind tikt op + of −.</li>
-            <li><b>🎲 Mix</b>: van alles wat (tellen, de rij, plus en min, het juiste teken).</li>
+            <li><b>⚖️ Vergelijken</b>: twee getallen of twee domino's, het kind tikt op &lt; (kleiner), = (gelijk) of &gt; (groter).</li>
+            <li><b>🎲 Mix</b>: van alles wat (tellen, de rij, plus en min, het juiste teken, vergelijken).</li>
           </ul>
           <p class="aide">Het kind antwoordt zelf door op het juiste antwoord te tikken. Na een fout verschijnt het juiste antwoord in het groen. Als het kind op het kader tikt, leest de app de som voor.</p>
           <p class="aide">Aangeraden niveaus: <b>tot 5 of 10</b> in de 3de kleuterklas, <b>tot 20</b> in het 1ste leerjaar, <b>tot 100</b> in het 2de leerjaar.</p>
@@ -921,7 +942,8 @@ textarea { min-height: 150px; resize: vertical; }
             <li><b>🔢 La suite</b> : trouver le nombre qui manque (3, 4, ?).</li>
             <li><b>🧮 Plus et moins</b> : additions et soustractions mélangées ; le résultat ne dépasse jamais le niveau choisi et ne descend jamais sous zéro.</li>
             <li><b>🤔 Le bon signe</b> : deux nombres et le résultat (7 ? 3 = 4), l'enfant touche + ou −.</li>
-            <li><b>🎲 Mélange</b> : un peu de tout (compter, la suite, plus et moins, le bon signe).</li>
+            <li><b>⚖️ Comparer</b> : deux nombres ou deux dominos, l'enfant touche &lt; (plus petit), = (égal) ou &gt; (plus grand).</li>
+            <li><b>🎲 Mélange</b> : un peu de tout (compter, la suite, plus et moins, le bon signe, comparer).</li>
           </ul>
           <p class="aide">L'enfant répond seul en touchant la bonne réponse. Après une erreur, la bonne réponse s'affiche en vert. En touchant le cadre, l'app lit le calcul à voix haute.</p>
           <p class="aide">Niveaux conseillés : <b>jusqu'à 5 ou 10</b> en 3e maternelle, <b>jusqu'à 20</b> en 1re primaire, <b>jusqu'à 100</b> en 2e primaire.</p>
@@ -997,6 +1019,7 @@ textarea { min-height: 150px; resize: vertical; }
     const st = getComputedStyle(el);
     const largeur = el.clientWidth - parseFloat(st.paddingLeft) - parseFloat(st.paddingRight), hauteur = el.clientHeight;
     if (q.domino) return Math.max(16, Math.min(hauteur * 0.8 / 2.1, largeur / 4.4));
+    if (q.dominos) return Math.max(14, Math.min(hauteur * 0.84 / 4.2, largeur / 6.6));
     if (q.exo === "compter") {
       const lignes = q.n > 5 ? 2 : 1, colonnes = q.n > 10 ? 10 : Math.min(q.n, 5), ecarts = q.n > 10 ? .5 : 0;
       return Math.max(16, Math.min(hauteur * 0.8 / (lignes * 1.12), largeur / (colonnes * 1.15 + ecarts + .2)));
@@ -1011,7 +1034,7 @@ textarea { min-height: 150px; resize: vertical; }
     el.innerHTML = dessinCalcul(q, reponse).html;
     if (reponse != null) return;
     el.classList.remove("entre"); void el.offsetWidth; el.classList.add("entre");
-    [0, 1, 2].forEach(i => { const b = document.getElementById("rep" + i); b.textContent = q.choix[i] ?? ""; b.className = "rep"; b.hidden = i >= q.choix.length; });
+    [0, 1, 2].forEach(i => { const b = document.getElementById("rep" + i); b.innerHTML = i < q.choix.length ? esc(q.choix[i]) + (q.legendes ? `<small>${q.legendes[i]}</small>` : "") : ""; b.className = "rep"; b.hidden = i >= q.choix.length; });
     app.querySelector(".reponses").classList.toggle("deux", q.choix.length === 2);
     const c = document.getElementById("compteur"); if (c) c.textContent = (partie.index + 1) + " / " + partie.total;
   }

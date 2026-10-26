@@ -1,5 +1,5 @@
 // Fonctionnement hors ligne : l'app est gardée en cache, la synchronisation est toujours en direct.
-const CACHE = "compte-avec-moi-20261026102425";
+const CACHE = "compte-avec-moi-20261026114209";
 const BASE = ["./", "index.html", "manifest.webmanifest", "icone-180.png", "icone-192.png", "icone-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(BASE)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith("compte-avec-moi-") && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
