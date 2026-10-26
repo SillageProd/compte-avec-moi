@@ -10,9 +10,15 @@ Elle s'installe sur iPad et iPhone depuis Safari : **Partager → Sur l'écran d
 - En touchant le cadre, l'app lit le calcul à voix haute.
 - Les résultats et le graphique des progrès (par jeu et par niveau) restent sur l'appareil.
 
+## Édition néerlandaise « Tel met mij »
+
+Une deuxième édition, entièrement en néerlandais, est à l'adresse `/nl/`, pour la partager avec d'autres parents.
+Elle est produite par `build.py` à partir du même code : chaque changement s'applique aux deux éditions. Elle n'a pas de synchronisation.
+
 ## Fichiers
 
 - `index.html`, `sw.js`, `manifest.webmanifest`, `version.json`, `icone-*.png` : l'app en ligne (GitHub Pages).
+- `nl/` : l'édition néerlandaise (mêmes fichiers).
 - `source/apercu.html` : la version de travail ; `source/build.py` produit les fichiers ci-dessus (`python3 source/build.py`).
 
 ## Synchroniser l'iPad et l'iPhone

@@ -1,5 +1,6 @@
 # Construit le site à mettre en ligne (à la racine du dépôt) à partir de apercu.html (la version de l'aperçu).
-# Même recette que « Lis avec moi » : une seule édition, en français.
+# Deux éditions sortent du même code : « Compte avec moi » (FR, avec synchronisation) à la racine,
+# « Tel met mij » (NL, sans synchronisation) dans nl/.
 import json, pathlib, re, time
 from PIL import Image, ImageDraw, ImageFont
 ici = pathlib.Path(__file__).parent
@@ -25,11 +26,12 @@ def icone(taille):
     d.text((T/2, T/2), "123", font=f, fill="#243057", anchor="mm")
     return im.resize((taille, taille), Image.LANCZOS)
 
-nom, cache = "Compte avec moi", "compte-avec-moi"
-tete, corps = source.split('<div id="app"></div>', 1)
-tete = tete.replace('<meta name="claude:viewport-fit-sides" content="cover">\n', "")
-(site / "index.html").write_text(f"""<!doctype html>
-<html lang="fr">
+def construire(dossier, src, nom, lang, cache, exclure=""):
+    dossier.mkdir(exist_ok=True)
+    tete, corps = src.split('<div id="app"></div>', 1)
+    tete = tete.replace('<meta name="claude:viewport-fit-sides" content="cover">\n', "")
+    (dossier / "index.html").write_text(f"""<!doctype html>
+<html lang="{lang}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -46,11 +48,11 @@ tete = tete.replace('<meta name="claude:viewport-fit-sides" content="cover">\n',
 </body>
 </html>
 """)
-(site / "version.json").write_text('{ "version": "' + numero + '" }\n')
-(site / "manifest.webmanifest").write_text(f"""{{
+    (dossier / "version.json").write_text('{ "version": "' + numero + '" }\n')
+    (dossier / "manifest.webmanifest").write_text(f"""{{
   "name": "{nom}",
   "short_name": "{nom}",
-  "lang": "fr",
+  "lang": "{lang}",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -62,7 +64,7 @@ tete = tete.replace('<meta name="claude:viewport-fit-sides" content="cover">\n',
   ]
 }}
 """)
-(site / "sw.js").write_text(f"""// Fonctionnement hors ligne : l'app est gardée en cache, la synchronisation est toujours en direct.
+    (dossier / "sw.js").write_text(f"""// Fonctionnement hors ligne : l'app est gardée en cache, la synchronisation est toujours en direct.
 const CACHE = "{cache}-{version}";
 const BASE = ["./", "index.html", "manifest.webmanifest", "icone-180.png", "icone-192.png", "icone-512.png"];
 self.addEventListener("install", e => {{ e.waitUntil(caches.open(CACHE).then(c => c.addAll(BASE)).then(() => self.skipWaiting())); }});
@@ -71,7 +73,7 @@ self.addEventListener("fetch", e => {{
   const url = new URL(e.request.url);
   // seulement l'app elle-même et ses polices ; jamais Google Apps Script (synchronisation toujours en direct)
   const garder = url.origin === self.location.origin || ["fonts.googleapis.com", "fonts.gstatic.com"].includes(url.hostname);
-  if (e.request.method !== "GET" || !garder || url.pathname.endsWith("version.json")) return;
+  if (e.request.method !== "GET" || !garder || url.pathname.endsWith("version.json")) return;{exclure}
   // la page : d'abord le réseau (pour les mises à jour), sinon le cache
   if (e.request.mode === "navigate") {{
     e.respondWith(fetch(e.request).then(r => {{ const c = r.clone(); caches.open(CACHE).then(k => k.put("index.html", c)); return r; }}).catch(() => caches.match("index.html")));
@@ -83,5 +85,20 @@ self.addEventListener("fetch", e => {{
   }})));
 }});
 """)
-for t in (180, 192, 512): icone(t).save(site / f"icone-{t}.png")
+    for t in (180, 192, 512): icone(t).save(dossier / f"icone-{t}.png")
+
+# édition famille (FR) : le service worker laisse l'édition NL à son propre service worker
+construire(site, source, "Compte avec moi", "fr", "compte-avec-moi",
+           exclure='\n  if (url.origin === self.location.origin && url.pathname.includes("/nl/")) return;')
+
+# édition partage (NL) « Tel met mij » : sans synchronisation
+def remplacer(texte, avant, apres):
+    assert texte.count(avant) == 1, avant
+    return texte.replace(avant, apres)
+nl = remplacer(source, 'const EDITION = "famille";', 'const EDITION = "partage";')
+nl = remplacer(nl, "<title>Compte avec moi</title>", "<title>Tel met mij</title>")
+nl = remplacer(nl, 'content="Compte avec moi"', 'content="Tel met mij"')
+nl = re.sub(r'const CODE_SYNCHRO = "(?:[^"\\]|\\.)*";', 'const CODE_SYNCHRO = "";', nl)
+assert "doPost" not in nl
+construire(site / "nl", nl, "Tel met mij", "nl-BE", "tel-met-mij")
 print("ok", version, "v" + numero)

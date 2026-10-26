@@ -1,0 +1,1179 @@
+<!doctype html>
+<html lang="nl-BE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#d8f3ee">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icone-180.png">
+<link rel="icon" href="icone-192.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Tel met mij</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tel met mij">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Fredoka:wght@500;600;700&display=swap">
+<style>
+/* Mise en page : une app plein écran, un écran à la fois, gros boutons pour petits doigts.
+   Même look que « Lis avec moi » (clair et vif), quel que soit le thème de l'appareil. */
+:root {
+  color-scheme: light;
+  --ciel: #d8f3ee;          /* fond menthe */
+  --ciel-2: #bfeae2;
+  --encre: #243057;         /* texte */
+  --encre-douce: #5a6488;
+  --cadre: #7176d6;         /* bord des cadres, comme les étiquettes de l'école */
+  --papier: #ffffff;
+  --soleil: #ffb627;
+  --orange: #ff8a3d;
+  --vrai: #22b573;
+  --vrai-fonce: #168a55;
+  --faux: #f2545b;
+  --faux-fonce: #c63a41;
+  --ombre: 0 6px 0 rgba(36, 48, 87, .18);
+  --f-titre: "Fredoka", "Arial Rounded MT Bold", "Trebuchet MS", system-ui, sans-serif;
+  --f-mot: "Andika", "Century Gothic", "Avenir Next", system-ui, sans-serif;
+}
+html, body { height: 100%; }
+body {
+  background: var(--ciel);
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(255,255,255,.55) 0 38px, transparent 39px),
+    radial-gradient(circle at 88% 12%, rgba(255,182,39,.28) 0 54px, transparent 55px),
+    radial-gradient(circle at 92% 86%, rgba(113,118,214,.18) 0 70px, transparent 71px),
+    radial-gradient(circle at 6% 92%, rgba(242,84,91,.14) 0 48px, transparent 49px);
+  color: var(--encre);
+  font-family: var(--f-titre);
+  font-size: 18px;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none; user-select: none;
+  overflow-x: hidden;
+}
+#app {
+  min-height: 100%;
+  box-sizing: border-box;
+  display: flex; flex-direction: column;
+  padding-block: 16px 20px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  max-width: 1100px; margin: 0 auto;
+}
+h1, h2, h3 { margin: 0; text-wrap: balance; font-weight: 700; }
+h1 { font-size: clamp(30px, 6vw, 52px); letter-spacing: .5px; }
+h2 { font-size: clamp(24px, 4.5vw, 36px); }
+p { margin: 0; }
+button { font: inherit; color: inherit; border: 0; cursor: pointer; touch-action: manipulation; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 4px solid var(--soleil); outline-offset: 3px; }
+input[type="text"], input[type="url"], textarea {
+  font: inherit; font-family: var(--f-mot); color: var(--encre);
+  background: var(--papier); border: 3px solid var(--cadre); border-radius: 16px;
+  padding: 14px 16px; width: 100%; box-sizing: border-box; font-size: 20px;
+  -webkit-user-select: text; user-select: text;
+}
+
+/* barre du haut */
+.barre { display: flex; align-items: center; gap: 12px; min-height: 64px; }
+.barre .titre { flex: 1; min-width: 0; text-align: center; }
+.rond {
+  width: 64px; height: 64px; border-radius: 50%; flex: none;
+  background: var(--papier); box-shadow: var(--ombre);
+  display: grid; place-items: center; font-size: 28px;
+}
+.rond:active, .gros:active, .tuile:active, .duree:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(36,48,87,.18); }
+.espace { width: 64px; flex: none; }
+
+/* gros boutons */
+.gros {
+  min-height: 84px; padding: 0 28px; border-radius: 28px;
+  font-size: clamp(24px, 4vw, 32px); font-weight: 700;
+  background: var(--soleil); color: var(--encre); box-shadow: var(--ombre);
+  display: inline-flex; align-items: center; justify-content: center; gap: 14px;
+}
+.gros.bleu { background: var(--cadre); color: #fff; }
+.gros.vert { background: var(--vrai); color: #fff; }
+.gros.blanc { background: var(--papier); }
+.gros.petit { min-height: 60px; font-size: 20px; border-radius: 20px; padding: 0 20px; }
+.gros[disabled] { opacity: .45; pointer-events: none; }
+
+/* écran profils */
+.centre { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 28px; }
+.entete { text-align: center; display: grid; gap: 6px; }
+.titre-app { text-align: center; margin: clamp(22px, 4vh, 40px) 0 0; font-size: clamp(38px, 8vw, 66px); font-weight: 800; letter-spacing: .5px; line-height: 1.1; color: #1f2f7a; }
+.titre-app + .centre h1 { font-size: clamp(26px, 4.8vw, 40px); }
+.entete p { color: var(--encre-douce); font-size: clamp(18px, 3vw, 24px); font-weight: 500; }
+.grille-profils { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 18px; max-width: 900px; width: 100%; margin: 0 auto; }
+.tuile {
+  background: var(--papier); border-radius: 30px; box-shadow: var(--ombre);
+  padding: 18px 10px 16px; display: grid; justify-items: center; gap: 8px;
+  border: 6px solid var(--c, var(--cadre)); min-height: 170px; align-content: center;
+}
+.tuile .avatar { font-size: 64px; line-height: 1; }
+.tuile .nom { font-size: 24px; font-weight: 600; max-width: 100%; overflow-wrap: anywhere; }
+.tuile .sous { font-size: 16px; font-weight: 500; color: var(--encre-douce); line-height: 1.2; }
+.tuile.ajout { border-style: dashed; background: rgba(255,255,255,.6); color: var(--encre-douce); }
+.tuile.ajout .avatar { font-size: 56px; font-weight: 700; color: var(--cadre); }
+.bas { display: flex; justify-content: center; }
+.version { text-align: center; color: var(--encre-douce); font-size: 13px; opacity: .7; margin: 0; font-variant-numeric: tabular-nums; }
+.maj { background: var(--soleil); border-radius: 16px; padding: 12px 18px; font-size: 17px; font-weight: 600; box-shadow: var(--ombre); }
+.copyright { text-align: center; color: var(--encre-douce); font-size: 14px; font-weight: 500; opacity: .8; margin: 4px 0 0; }
+.lien-parents { background: transparent; color: var(--encre-douce); font-size: 18px; font-weight: 600; padding: 14px 18px; border-radius: 14px; }
+
+/* choix du calcul */
+.grille-exos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; max-width: 760px; width: 100%; margin: 0 auto; }
+.grille-exos .tuile { min-height: 180px; }
+.grille-exos .tuile:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.niveaux { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; }
+.niveaux .etiquette { margin-right: 4px; }
+.niveaux .puce { min-width: 84px; font-size: 26px; font-weight: 700; }
+.niveaux .puce[aria-pressed="true"] { background: var(--cadre); color: #fff; box-shadow: var(--ombre); }
+
+/* création de profil */
+.panneau { background: var(--papier); border-radius: 30px; box-shadow: var(--ombre); padding: 22px; display: grid; gap: 18px; max-width: 760px; width: 100%; margin: 0 auto; box-sizing: border-box; }
+.etiquette { font-size: 18px; font-weight: 600; color: var(--encre-douce); }
+.choix-animaux { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 10px; }
+.choix-animaux button { height: 72px; border-radius: 20px; background: var(--ciel); font-size: 40px; border: 4px solid transparent; }
+.choix-animaux button[aria-pressed="true"] { border-color: var(--cadre); background: #fff7e0; }
+.choix-couleurs { display: flex; flex-wrap: wrap; gap: 12px; }
+.choix-couleurs button { width: 60px; height: 60px; border-radius: 50%; background: var(--c); border: 5px solid #fff; box-shadow: 0 0 0 3px transparent; }
+.choix-couleurs button[aria-pressed="true"] { box-shadow: 0 0 0 4px var(--encre); }
+
+/* choix du nombre de calculs */
+.durees { display: grid; gap: 12px; width: 100%; margin: 0 auto; }
+.duree {
+  aspect-ratio: 1; max-width: 100%; border-radius: 26px; background: var(--papier); box-shadow: var(--ombre);
+  display: grid; place-content: center; text-align: center; border: 5px solid transparent;
+}
+.duree span { font-size: clamp(13px, 2.4vw, 18px); color: var(--encre-douce); }
+.durees.nombres { grid-template-columns: repeat(6, minmax(0, 1fr)); max-width: 900px; }
+.nombres .duree b { font-size: clamp(26px, 5.2vw, 50px); }
+.nombres .duree[aria-pressed="true"] { border-color: var(--cadre); background: #eceeff; }
+.duree[disabled] { opacity: .35; pointer-events: none; }
+.puce.normal[aria-pressed="true"] { background: var(--cadre); }
+.note { text-align: center; color: var(--encre-douce); font-size: 18px; font-weight: 500; }
+
+/* jeu */
+.jeu { flex: 1; display: grid; grid-template-rows: auto 1fr auto; gap: 16px; min-height: 0; }
+.pastille { background: var(--papier); border-radius: 999px; padding: 10px 20px; font-size: clamp(24px, 4vw, 34px); font-weight: 700; box-shadow: var(--ombre); font-variant-numeric: tabular-nums; display: inline-flex; gap: 10px; align-items: center; }
+.pastille.urgent { background: var(--faux); color: #fff; }
+.scene { display: grid; place-items: center; min-height: 0; position: relative; }
+.cadre-mot {
+  background: var(--papier);
+  border: clamp(8px, 1.4vw, 13px) solid var(--cadre);
+  border-radius: clamp(26px, 4vw, 44px);
+  /* taille fixe : seul le contenu s'adapte à l'intérieur */
+  width: min(88vw, 680px); height: clamp(170px, 34vh, 320px);
+  padding: 0 clamp(18px, 4vw, 40px);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 10px 0 rgba(36,48,87,.14);
+  font-family: var(--f-mot); color: #2f3433;
+  line-height: 1.1; text-align: center; box-sizing: border-box; white-space: nowrap; overflow: hidden;
+  transform: rotate(-1.5deg);
+}
+.cadre-mot.entre { animation: entre .28s ease-out; }
+@keyframes entre { from { transform: rotate(-1.5deg) scale(.6); opacity: 0; } to { transform: rotate(-1.5deg) scale(1); opacity: 1; } }
+.cadre-mot .trou { color: var(--orange); font-weight: 700; display: inline-block; min-width: .7em; }
+.cadre-mot .trou.ok { color: var(--vrai); animation: entre .28s ease-out; }
+.cadre-mot .suite { display: inline-block; margin: 0 .3em; }
+.objets { display: flex; gap: .5em; align-items: center; justify-content: center; line-height: 1.12; }
+.objets .bloc { display: grid; grid-template-columns: repeat(5, 1.15em); justify-items: center; }
+.objets .bloc.court { grid-template-columns: repeat(var(--n), 1.15em); }
+.domino { display: inline-flex; background: #fff; border: .08em solid #2f3433; border-radius: .28em; box-shadow: 0 .08em 0 rgba(36,48,87,.2); }
+.domino .moitie { width: 2em; height: 2em; padding: .2em; box-sizing: border-box; display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); }
+.domino .moitie + .moitie { border-left: .06em solid #2f3433; }
+.domino .pt { width: .4em; height: .4em; border-radius: 50%; background: #1b1d22; place-self: center; }
+.verdict { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+.verdict span { font-size: clamp(120px, 26vw, 260px); font-weight: 700; line-height: 1; animation: tampon .45s ease-out forwards; }
+.verdict.ok span { color: var(--vrai); }
+.verdict.ko span { color: var(--faux); }
+@keyframes tampon { 0% { transform: scale(2); opacity: 0; } 40% { transform: scale(1); opacity: .95; } 100% { transform: scale(1); opacity: 0; } }
+.reponses.deux { grid-template-columns: 1fr 1fr; }
+.reponses { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: clamp(12px, 2.6vw, 26px); max-width: 820px; width: 100%; margin: 0 auto; }
+.rep {
+  min-height: clamp(110px, 18vh, 170px); border-radius: 34px; color: var(--encre);
+  font-size: clamp(54px, 11vw, 104px); font-weight: 700; line-height: 1; font-family: var(--f-mot);
+  display: grid; place-items: center; font-variant-numeric: tabular-nums;
+  background: var(--papier); border: 6px solid var(--cadre); box-shadow: 0 8px 0 rgba(36,48,87,.22);
+}
+.rep:active { transform: translateY(6px); box-shadow: 0 2px 0 rgba(36,48,87,.22); }
+.rep.v { background: var(--vrai); border-color: var(--vrai); color: #fff; box-shadow: 0 8px 0 var(--vrai-fonce); }
+.rep.x { background: var(--faux); border-color: var(--faux); color: #fff; box-shadow: 0 8px 0 var(--faux-fonce); }
+
+/* fin de partie */
+.fin { flex: 1; display: grid; align-content: center; justify-items: center; gap: 22px; text-align: center; }
+.medaille { font-size: 96px; line-height: 1; }
+.bravo { font-size: clamp(44px, 10vw, 84px); color: var(--orange); text-shadow: 0 4px 0 rgba(36,48,87,.15); overflow-wrap: anywhere; animation: bravo .7s cubic-bezier(.3,1.6,.5,1) both; }
+@keyframes bravo { from { transform: scale(.3) rotate(-8deg); opacity: 0; } to { transform: scale(1) rotate(-2deg); opacity: 1; } }
+.score-grand { font-size: clamp(80px, 18vw, 150px); font-weight: 700; line-height: .9; color: var(--vrai); font-variant-numeric: tabular-nums; }
+.score-legende { font-size: clamp(22px, 4vw, 32px); font-weight: 600; }
+.cases { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
+.case { background: var(--papier); border-radius: 26px; box-shadow: var(--ombre); padding: 16px 24px; min-width: 130px; display: grid; gap: 2px; }
+.case b { font-size: 48px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.case span { font-size: 18px; color: var(--encre-douce); font-weight: 600; }
+.case.v b { color: var(--vrai); } .case.x b { color: var(--faux); } .case.t b { color: var(--cadre); }
+.message { background: var(--papier); border: 5px solid var(--soleil); border-radius: 26px; padding: 16px 22px; font-size: clamp(20px, 3.6vw, 28px); font-weight: 600; max-width: 680px; }
+.message.mieux { border-color: var(--vrai); }
+.badge { background: var(--soleil); border-radius: 999px; padding: 8px 20px; font-size: 22px; font-weight: 700; }
+.actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
+
+/* progrès */
+.onglets { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.onglet { min-height: 60px; padding: 0 24px; border-radius: 20px; background: rgba(255,255,255,.6); font-size: 22px; font-weight: 600; }
+.onglet[aria-pressed="true"] { background: var(--papier); box-shadow: var(--ombre); }
+.onglet.normal[aria-pressed="true"] { color: var(--cadre); }
+.puces { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.puce { min-height: 52px; min-width: 76px; border-radius: 16px; background: rgba(255,255,255,.6); font-size: 20px; font-weight: 600; }
+.puce[aria-pressed="true"] { background: var(--orange); color: #fff; }
+.puce.exo[aria-pressed="true"] { background: var(--papier); color: var(--encre); box-shadow: inset 0 0 0 4px var(--c); }
+.puce small, .onglet small { font-size: .75em; opacity: .75; }
+.graphe { background: var(--papier); border-radius: 30px; box-shadow: var(--ombre); padding: 18px 12px 12px; overflow-x: auto; }
+.graphe svg { display: block; height: auto; }
+.graphe text { font-family: var(--f-titre); }
+.vide { text-align: center; color: var(--encre-douce); font-size: 22px; padding: 40px 10px; display: grid; gap: 8px; }
+.vide .ico { font-size: 64px; }
+.resume { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+
+/* espace parents */
+.parents { display: grid; gap: 18px; max-width: 820px; width: 100%; margin: 0 auto; }
+.parents h3 { font-size: 24px; }
+.parents .aide { color: var(--encre-douce); font-size: 17px; font-weight: 500; line-height: 1.45; font-family: system-ui, sans-serif; }
+.parents ol, .parents ul { margin: 0; padding-left: 22px; display: grid; gap: 4px; }
+.ligne { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.ligne > input { flex: 1 1 260px; min-width: 0; }
+.statut { font-size: 17px; font-weight: 600; font-family: system-ui, sans-serif; }
+.statut.ok { color: var(--vrai-fonce); } .statut.ko { color: var(--faux-fonce); }
+.profil-ligne { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 8px 0; border-top: 2px dashed var(--ciel-2); }
+.profil-ligne .qui { flex: 1 1 140px; min-width: 0; display: grid; gap: 2px; }
+.profil-ligne .confirmer { flex: 1 1 100%; background: #fff1f1; border: 3px solid var(--faux); border-radius: 18px; padding: 14px 16px; display: grid; gap: 12px; }
+.profil-ligne .confirmer p { font-size: 18px; font-weight: 500; line-height: 1.4; font-family: system-ui, sans-serif; }
+.profil-ligne:first-of-type { border-top: 0; }
+.profil-ligne .nom { min-width: 0; font-size: 22px; font-weight: 600; overflow-wrap: anywhere; }
+.btn-danger { background: #ffe3e4; color: var(--faux-fonce); min-height: 52px; padding: 0 16px; border-radius: 16px; font-weight: 600; font-size: 17px; }
+.btn-danger.arme { background: var(--faux); color: #fff; }
+textarea { min-height: 150px; resize: vertical; }
+.porte { display: grid; gap: 18px; justify-items: center; text-align: center; }
+.porte .question { font-size: 44px; font-weight: 700; }
+.porte .ligne { justify-content: center; }
+.porte .ligne button { width: 90px; }
+
+#toast {
+  position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); z-index: 30;
+  transform: translate(-50%, 140%); opacity: 0; transition: transform .3s, opacity .3s;
+  background: var(--encre); color: #fff; font-size: 20px; font-weight: 600;
+  padding: 14px 22px; border-radius: 20px; box-shadow: var(--ombre); max-width: calc(100% - 32px); text-align: center;
+}
+#toast.visible { transform: translate(-50%, 0); opacity: 1; }
+#fete {
+  position: fixed; inset: 0; z-index: 19; overflow: hidden; cursor: pointer;
+  display: grid; place-items: center; text-align: center; color: #fff;
+  padding-block: env(safe-area-inset-top, 0px) env(safe-area-inset-bottom, 0px);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: radial-gradient(circle at 50% 38%, #4a3aa8 0%, #262a6b 45%, #141634 100%);
+  animation: feteEntre .35s ease-out both;
+}
+#fete.sortie { animation: feteSort .45s ease-in forwards; }
+@keyframes feteEntre { from { opacity: 0; } to { opacity: 1; } }
+@keyframes feteSort { to { opacity: 0; transform: scale(1.08); } }
+#fete .rayons {
+  position: absolute; left: 50%; top: 38%; width: 240vmax; height: 240vmax; margin: -120vmax 0 0 -120vmax;
+  background: repeating-conic-gradient(rgba(255, 214, 107, .14) 0 9deg, transparent 9deg 18deg);
+  animation: tourne 16s linear infinite;
+}
+@keyframes tourne { to { transform: rotate(360deg); } }
+#fete .etoiles { position: absolute; inset: 0; pointer-events: none; }
+#fete .etoile { position: absolute; font-size: var(--t); animation: scintille 2.4s ease-in-out var(--d) infinite both; }
+@keyframes scintille { 0%, 100% { opacity: .15; transform: scale(.6) rotate(0); } 50% { opacity: 1; transform: scale(1.2) rotate(25deg); } }
+.fete-contenu { position: relative; display: grid; gap: clamp(10px, 2vh, 18px); justify-items: center; max-width: 900px; }
+.fete-emoji { font-size: clamp(110px, 26vw, 220px); line-height: 1; filter: drop-shadow(0 12px 0 rgba(0,0,0,.3));
+  animation: arrive .9s cubic-bezier(.3,1.7,.5,1) both, danse 2.2s ease-in-out 1s infinite; }
+@keyframes arrive { from { transform: scale(0) rotate(-30deg); } to { transform: scale(1) rotate(0); } }
+@keyframes danse { 0%, 100% { transform: rotate(-7deg) scale(1); } 50% { transform: rotate(7deg) scale(1.08); } }
+.fete-titre { font-size: clamp(42px, 10.5vw, 108px); line-height: 1.05; margin: 0; }
+.fete-titre .mot { display: inline-block; white-space: nowrap; }
+.fete-titre .l { display: inline-block; text-shadow: 0 5px 0 rgba(0,0,0,.35);
+  animation: lettre .6s cubic-bezier(.3,1.9,.5,1) both; animation-delay: calc(.35s + var(--i) * 55ms); }
+.fete-titre .l:nth-child(5n+1) { color: #ffd36b; } .fete-titre .l:nth-child(5n+2) { color: #ff9a5a; }
+.fete-titre .l:nth-child(5n+3) { color: #7ee8b8; } .fete-titre .l:nth-child(5n+4) { color: #ff9bd2; } .fete-titre .l:nth-child(5n) { color: #8fd3ff; }
+@keyframes lettre { from { transform: translateY(-120px) scale(.3); opacity: 0; } to { transform: none; opacity: 1; } }
+.fete-extra { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; justify-content: center; animation: monte .6s .9s both; }
+.fete-grand { font-size: clamp(70px, 17vw, 150px); font-weight: 700; line-height: 1; color: #ffd36b; font-variant-numeric: tabular-nums; text-shadow: 0 6px 0 rgba(0,0,0,.35); }
+.fete-legende { font-size: clamp(22px, 4vw, 34px); font-weight: 600; }
+.fete-delta { background: var(--vrai); border-radius: 999px; padding: 10px 22px; font-size: clamp(19px, 3.4vw, 28px); font-weight: 700; box-shadow: 0 5px 0 var(--vrai-fonce);
+  animation: monte .6s 1.4s both, pulse 1.1s ease-in-out 2s infinite; }
+@keyframes pulse { 50% { transform: scale(1.07); } }
+.fete-sous { font-size: clamp(20px, 3.8vw, 30px); font-weight: 600; max-width: 26ch; animation: monte .6s 1.7s both; }
+.fete-touche { font-size: 17px; opacity: .7; animation: monte .6s 2.4s both; }
+@keyframes monte { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+#confettis { position: fixed; inset: 0; pointer-events: none; z-index: 20; }
+@media (max-width: 520px) {
+  .durees.nombres { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .rond, .espace { width: 56px; height: 56px; }
+  .grille-exos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .grille-exos .tuile { min-height: 140px; }
+  .grille-exos .tuile .avatar { font-size: 48px; }
+  .niveaux .etiquette { flex-basis: 100%; text-align: center; margin: 0; }
+  .niveaux .puce { min-width: 70px; }
+  .rep { border-radius: 26px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition: none !important; }
+}
+</style>
+
+</head>
+<body>
+<div id="app"></div>
+<canvas id="confettis"></canvas>
+
+<script>
+(() => {
+  "use strict";
+
+  // ---------- édition ----------
+  // « famille » = version de Robin (FR, avec synchronisation)
+  // « partage » = version néerlandaise « Tel met mij » pour les autres parents (produite par build.py)
+  const EDITION = "partage";
+  const NL = EDITION === "partage";
+  const L = (fr, nl) => NL ? nl : fr;   // texte selon la langue de l'édition
+
+  // ---------- stockage ----------
+  const PREFIXE = L("cam_", "tmm_");
+  const lire = (cle, defaut) => { try { const v = localStorage.getItem(PREFIXE + cle); return v ? JSON.parse(v) : defaut; } catch (e) { return defaut; } };
+  const ecrire = (cle, val) => { try { localStorage.setItem(PREFIXE + cle, JSON.stringify(val)); } catch (e) {} };
+
+  const MAX_PROFILS = 6;
+  // Numéro de version (MAJEUR.MINEUR.CORRECTIF) : à augmenter à chaque mise en ligne
+  const VERSION = "1.6.0";
+  let versionEnLigne = null;   // version publiée sur le site, lue dans version.json
+  const ANIMAUX = ["🦁", "🐸", "🐼", "🦊", "🐰", "🐙", "🐢", "🦄", "🐶", "🐱", "🐵", "🐧", "🐨", "🐯", "🦖", "🐝"];
+  const COULEURS = ["#f2545b", "#ff8a3d", "#ffb627", "#22b573", "#3aa8e0", "#7176d6", "#d465c2"];
+
+  // ---------- les calculs ----------
+  const EXOS = [
+    { id: "compter", ico: "🍎", nom: L("Compter", "Tellen"), sous: L("Combien y en a-t-il\u00a0?", "Hoeveel zijn er?"), c: "#ff8a3d" },
+    { id: "suite", ico: "🔢", nom: L("La suite", "De rij"), sous: L("Quel nombre manque\u00a0?", "Welk getal ontbreekt?"), c: "#3aa8e0" },
+    { id: "plusmoins", ico: "🧮", nom: L("Plus et moins", "Plus en min"), sous: L("Additions et soustractions", "Optellen en aftrekken"), c: "#7176d6" },
+    { id: "signe", ico: "🤔", nom: L("Le bon signe", "Het juiste teken"), sous: L("Plus ou moins\u00a0?", "Plus of min?"), c: "#22b573" },
+    { id: "melange", ico: "🎲", nom: L("Mélange", "Mix"), sous: L("Un peu de tout", "Van alles wat"), c: "#ffb627" }
+  ];
+  const exoDe = id => EXOS.find(e => e.id === id) || EXOS[2];
+  const NIVEAUX = [5, 10, 20, 100];        // « jusqu'à … »
+  const MAX_OBJETS = 20;                   // on ne compte jamais plus de 20 objets
+  const OBJETS = NL
+    ? [["🍎", "appels"], ["⭐", "sterren"], ["🐞", "lieveheersbeestjes"], ["🎈", "ballonnen"], ["🐟", "vissen"], ["🌸", "bloemen"], ["🚗", "auto's"], ["🍓", "aardbeien"], ["🐥", "kuikens"], ["🍪", "koekjes"]]
+    : [["🍎", "pommes"], ["⭐", "étoiles"], ["🐞", "coccinelles"], ["🎈", "ballons"], ["🐟", "poissons"], ["🌸", "fleurs"], ["🚗", "voitures"], ["🍓", "fraises"], ["🐥", "poussins"], ["🍪", "biscuits"]];
+
+  let profils = lire("profils", []);
+  let resultats = lire("resultats", []);
+  let choix = lire("choix", {});                   // dernier calcul et niveau choisis, par profil
+  let sonActif = lire("son", true);
+  let lienSynchro = NL ? "" : lire("lienSynchro", "");
+  let supprimes = lire("supprimes", []);           // profils supprimés, à transmettre aux autres appareils
+  let etatSynchro = lire("etatSynchro", null);     // { ok, date, texte }
+
+  const app = document.getElementById("app");
+  let ecran = "profils";
+  let profil = null;             // profil sélectionné
+  let brouillon = null;          // profil en création
+  let nombreChoisi = lire("nombre", 10);
+  let partie = null;
+  let fin = null;                // résultat affiché à la fin
+  let etatProgres = {};
+  let porte = null;              // petite question d'accès à l'espace parents
+  let suppressionArmee = null;
+
+  // ---------- utilitaires ----------
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const melanger = t => { const a = t.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const hasard = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+  const mmss = ms => { const s = Math.max(0, Math.round(ms / 1000)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+  const tempsEnMots = ms => {
+    const s = Math.max(0, Math.round(ms / 1000)), m = Math.floor(s / 60), r = s % 60;
+    if (!m) return r + L(" seconde" + (r > 1 ? "s" : ""), r === 1 ? " seconde" : " seconden");
+    return m + " min" + (r ? " " + String(r).padStart(2, "0") + " s" : "");
+  };
+  const dateCourte = iso => { const d = new Date(iso); return String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0"); };
+  const NOMBRES = [5, 10, 15, 20, 30, 50];
+  const calculs = n => n + L(" calcul" + (n > 1 ? "s" : ""), n === 1 ? " som" : " sommen");
+  const choixDe = p => { const c = { exo: "plusmoins", niveau: 10, ...(choix[p.id] || {}) }; if (!EXOS.some(e => e.id === c.exo)) c.exo = "plusmoins"; return c; };
+  const libelleCalcul = (exo, niveau) => exoDe(exo).ico + " " + exoDe(exo).nom + L(" · jusqu'à ", " · tot ") + niveau;
+  const sauverProfils = () => ecrire("profils", profils);
+  const sauverResultats = () => ecrire("resultats", resultats);
+
+  // ---------- sons ----------
+  let audio = null;
+  function bip(type) {
+    if (!sonActif) return;
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      const notes = type === "ok" ? [660, 880] : type === "ko" ? [300, 220] : [523, 659, 784, 1047];
+      notes.forEach((f, i) => {
+        const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime + i * 0.09;
+        o.type = "sine"; o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.18, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+        o.connect(g).connect(audio.destination); o.start(t); o.stop(t + 0.18);
+      });
+    } catch (e) {}
+  }
+
+  // Petite fanfare pour les grandes fêtes
+  function fanfare() {
+    if (!sonActif) return;
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      const air = [[523, 0, .14], [523, .16, .14], [523, .32, .14], [659, .48, .3], [784, .82, .18], [659, 1.02, .14], [784, 1.18, .2], [1047, 1.42, .7]];
+      air.forEach(([f, d, l]) => {
+        [1, 2].forEach((mult, k) => {
+          const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime + d;
+          o.type = k ? "sine" : "triangle"; o.frequency.value = f * mult;
+          g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(k ? 0.05 : 0.2, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + l);
+          o.connect(g).connect(audio.destination); o.start(t); o.stop(t + l + 0.05);
+        });
+      });
+    } catch (e) {}
+  }
+
+  // Phrase dite à voix haute, si les sons sont activés
+  function dire(texte) {
+    if (!sonActif || !window.speechSynthesis) return;
+    try {
+      const u = new SpeechSynthesisUtterance(texte);
+      u.lang = L("fr-FR", "nl-BE"); u.rate = .95; u.pitch = 1.2;
+      const voix = speechSynthesis.getVoices().find(v => v.lang === u.lang) || speechSynthesis.getVoices().find(v => v.lang.slice(0, 2) === u.lang.slice(0, 2)); if (voix) u.voice = voix;
+      speechSynthesis.cancel(); speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+
+  // ---------- confettis ----------
+  const toile = document.getElementById("confettis");
+  function confettis() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const ctx = toile.getContext("2d"), dpr = window.devicePixelRatio || 1;
+    toile.width = innerWidth * dpr; toile.height = innerHeight * dpr; ctx.scale(dpr, dpr);
+    const parts = Array.from({ length: 140 }, () => ({
+      x: Math.random() * innerWidth, y: -20 - Math.random() * innerHeight * .4,
+      vx: (Math.random() - .5) * 3, vy: 2 + Math.random() * 4, r: Math.random() * 6.28, vr: (Math.random() - .5) * .3,
+      c: COULEURS[Math.floor(Math.random() * COULEURS.length)], w: 8 + Math.random() * 8, h: 6 + Math.random() * 6
+    }));
+    const debut = performance.now();
+    (function pas(t) {
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+      parts.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += .05; p.r += p.vr; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore(); });
+      if (t - debut < 2600) requestAnimationFrame(pas); else ctx.clearRect(0, 0, innerWidth, innerHeight);
+    })(debut);
+  }
+
+  // ---------- feu d'artifice (quand l'enfant bat son score) ----------
+  function feuArtifice(grand) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const ctx = toile.getContext("2d"), dpr = window.devicePixelRatio || 1, W = innerWidth, H = innerHeight;
+    toile.width = W * dpr; toile.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const fusees = [], etincelles = [], debut = performance.now(), DUREE = grand ? 6500 : 4200, force = grand ? 1.6 : 1;
+    const tirs = Array.from({ length: grand ? 18 : 7 }, (_, i) => ({ t: i * (grand ? 340 : 450) + Math.random() * 200, x: W * (.08 + Math.random() * .84), y: H * (.08 + Math.random() * .4), c: COULEURS[i % COULEURS.length], parti: false }));
+    function eclater(x, y, c) {
+      const n = Math.round((60 + Math.random() * 30) * force);
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2, v = (2.2 + Math.random() * 3.2) * force;
+        etincelles.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, vie: 1, c: Math.random() < .2 ? "#ffffff" : c, r: (2 + Math.random() * 2) * (grand ? 1.3 : 1) });
+      }
+      bip("ok");
+    }
+    (function pas(t) {
+      const e = t - debut;
+      ctx.globalCompositeOperation = "destination-out"; ctx.fillStyle = "rgba(0,0,0,.22)"; ctx.fillRect(0, 0, W, H);
+      ctx.globalCompositeOperation = "source-over";
+      tirs.forEach(s => { if (!s.parti && e >= s.t) { s.parti = true; fusees.push({ x: s.x, y: H + 10, cy: s.y, vy: -(H - s.y) / 38, c: s.c }); } });
+      for (let i = fusees.length - 1; i >= 0; i--) {
+        const f = fusees[i]; f.y += f.vy;
+        ctx.fillStyle = "#ffd36b"; ctx.beginPath(); ctx.arc(f.x, f.y, 3.5, 0, 7); ctx.fill();
+        if (f.y <= f.cy) { eclater(f.x, f.y, f.c); fusees.splice(i, 1); }
+      }
+      for (let i = etincelles.length - 1; i >= 0; i--) {
+        const p = etincelles[i]; p.x += p.vx; p.y += p.vy; p.vx *= .97; p.vy = p.vy * .97 + .06; p.vie -= .013;
+        if (p.vie <= 0) { etincelles.splice(i, 1); continue; }
+        ctx.globalAlpha = Math.max(0, p.vie); ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+      }
+      if (e < DUREE || etincelles.length || fusees.length) requestAnimationFrame(pas); else ctx.clearRect(0, 0, W, H);
+    })(debut);
+  }
+
+  // ---------- grande fête plein écran (première partie, progrès, record) ----------
+  function grandeFete(o) {
+    const ancienne = document.getElementById("fete"); if (ancienne) ancienne.remove();
+    const f = document.createElement("div");
+    f.id = "fete"; f.setAttribute("role", "dialog"); f.setAttribute("aria-label", o.titre);
+    let i = 0;
+    const titre = o.titre.split(" ").map(m => `<span class="mot">${[...m].map(c => `<span class="l" style="--i:${i++}">${esc(c)}</span>`).join("")}</span>`).join(" ");
+    const etoiles = Array.from({ length: 14 }, (_, k) => `<span class="etoile" style="left:${(k * 7.3 + Math.random() * 5) % 100}%;top:${Math.random() * 100}%;--d:${(Math.random() * 3).toFixed(2)}s;--t:${(18 + Math.random() * 30).toFixed(0)}px">${k % 3 ? "⭐" : "✨"}</span>`).join("");
+    f.innerHTML = `
+      <div class="rayons"></div><div class="etoiles">${etoiles}</div>
+      <div class="fete-contenu">
+        <div class="fete-emoji">${o.emoji}</div>
+        <h2 class="fete-titre">${titre}</h2>
+        <div class="fete-extra"><span class="fete-grand" data-cible="${o.valeur}" data-suffixe="${o.suffixe || ""}">0${o.suffixe || ""}</span><span class="fete-legende">${esc(o.legende)}</span></div>
+        ${o.delta ? `<div class="fete-delta">${esc(o.delta)}</div>` : ""}
+        <p class="fete-sous">${esc(o.sous)}</p>
+        <p class="fete-touche">${L("Touche l'écran pour continuer", "Tik op het scherm om verder te gaan")}</p>
+      </div>`;
+    document.body.appendChild(f);
+    // le score monte de 0 à sa valeur
+    const g = f.querySelector(".fete-grand"), cible = Number(g.dataset.cible), suf = g.dataset.suffixe, t0 = performance.now() + 900;
+    (function compte(t) {
+      const k = Math.min(1, Math.max(0, (t - t0) / 1200));
+      g.textContent = Math.round(cible * (1 - Math.pow(1 - k, 3))) + suf;
+      if (k < 1 && f.isConnected) requestAnimationFrame(compte);
+    })(performance.now());
+    const ouverture = Date.now();
+    const fermer = force => {
+      if (!f.isConnected || (!force && Date.now() - ouverture < 1500)) return;
+      f.classList.add("sortie"); setTimeout(() => f.remove(), 450);
+    };
+    f.addEventListener("click", () => fermer(false));
+    setTimeout(() => fermer(true), 8000);
+    fanfare(); feuArtifice(true);
+    setTimeout(() => dire(o.parole), 1600);
+  }
+
+  // ---------- fabrique de calculs ----------
+  // Chaque calcul : ce qu'on montre, ce qu'on dit, la bonne réponse et les réponses au choix (trois, ou + et − pour « signe »).
+  function nouveauCalcul(exo, niveau) {
+    if (exo === "melange") exo = ["compter", "suite", "plusmoins", "signe"][hasard(0, 3)];
+    if (exo === "plusmoins") exo = hasard(0, 1) ? "plus" : "moins";
+    let q;
+    if (exo === "signe") {
+      // deux nombres et le résultat : l'enfant choisit + ou −
+      const c = nouveauCalcul(hasard(0, 1) ? "plus" : "moins", niveau);
+      return { exo, a: c.a, b: c.b, res: c.rep, rep: c.signe, choix: ["+", "−"], parole: c.a + " … " + c.b + L(" égale ", " is ") + c.rep + L(". Plus ou moins ?", ". Plus of min?"), cle: c.cle };
+    }
+    if (exo === "compter" && hasard(0, 9) < 4) {
+      // un domino : on compte les points noirs des deux moitiés (6 au plus par moitié)
+      const n = hasard(1, Math.min(niveau, 12)), g = hasard(Math.max(0, n - 6), Math.min(6, n));
+      q = { exo, domino: [g, n - g], n, rep: n, parole: L("Combien de points noirs sur le domino ?", "Hoeveel zwarte stippen staan er op de domino?"), cle: "d" + g + "-" + (n - g) };
+    } else if (exo === "compter") {
+      const n = hasard(1, Math.min(niveau, MAX_OBJETS)), [objet, nom] = OBJETS[hasard(0, OBJETS.length - 1)];
+      q = { exo, n, objet, rep: n, parole: L("Combien y a-t-il de " + nom + " ?", "Hoeveel " + nom + " zijn er?"), cle: "c" + n };
+    } else if (exo === "suite") {
+      const d = hasard(0, Math.max(0, niveau - 2)), trou = hasard(0, 2), nombres = [d, d + 1, d + 2];
+      q = { exo, nombres, trou, rep: nombres[trou], parole: L("Quel nombre manque ? ", "Welk getal ontbreekt? ") + nombres.map((n, i) => i === trou ? "…" : n).join(", "), cle: "s" + d + "-" + trou };
+    } else if (exo === "plus") {
+      const total = hasard(2, niveau), a = hasard(1, total - 1);
+      q = { exo, a, b: total - a, signe: "+", rep: total, parole: a + " plus " + (total - a), cle: a + "+" + (total - a) };
+    } else {
+      const a = hasard(2, niveau), b = hasard(1, a - 1);
+      q = { exo, a, b, signe: "−", rep: a - b, parole: a + L(" moins ", " min ") + b, cle: a + "-" + b };
+    }
+    // deux réponses fausses tout près de la bonne, jamais en dessous de 0 (de 1 pour compter)
+    const min = q.exo === "compter" ? 1 : 0;
+    const proches = [-2, -1, 1, 2, ...(niveau > 20 ? [-10, 10] : [])].map(e => q.rep + e).filter(v => v >= min);
+    q.choix = [q.rep, ...melanger(proches).slice(0, 2)].sort((a, b) => a - b);
+    return q;
+  }
+  // Le calcul suivant : jamais un des 4 derniers, s'il y a assez de choix
+  function calculSuivant(p) {
+    let q;
+    for (let essai = 0; essai < 30; essai++) { q = nouveauCalcul(p.exo, p.niveau); if (!p.recents.includes(q.cle)) break; }
+    p.recents = [q.cle, ...p.recents].slice(0, 4);
+    return q;
+  }
+  // Le contenu du cadre ; « reponse » remplit le trou une fois que l'enfant a répondu
+  function dessinCalcul(q, reponse) {
+    const trou = reponse == null ? `<span class="trou">?</span>` : `<span class="trou ok">${q.rep}</span>`;
+    if (q.domino) {
+      const PIPS = [[], [5], [1, 9], [1, 5, 9], [1, 3, 7, 9], [1, 3, 5, 7, 9], [1, 3, 4, 6, 7, 9]];
+      const moitie = k => `<span class="moitie">${PIPS[k].map(c => `<span class="pt" style="grid-area:${Math.ceil(c / 3)} / ${(c - 1) % 3 + 1}"></span>`).join("")}</span>`;
+      return { html: `<span class="domino">${q.domino.map(moitie).join("")}</span>` };
+    }
+    if (q.exo === "compter") {
+      const blocs = [];
+      for (let k = 0; k < q.n; k += 10) {
+        const m = Math.min(10, q.n - k);
+        blocs.push(`<span class="bloc${m < 5 ? " court" : ""}" style="--n:${m}">${`<span>${q.objet}</span>`.repeat(m)}</span>`);
+      }
+      return { html: `<span class="objets">${blocs.join("")}</span>`, objets: true };
+    }
+    if (q.exo === "signe") return { html: `${q.a} ${trou} ${q.b} = ${q.res}`, texte: `${q.a} + ${q.b} = ${q.res}` };
+    if (q.exo === "suite") return { html: q.nombres.map((n, i) => `<span class="suite">${i === q.trou ? trou : n}</span>`).join(""), texte: q.nombres.join("    ") };
+    return { html: `${q.a} ${q.signe} ${q.b} = ${trou}`, texte: `${q.a} ${q.signe} ${q.b} = ${q.rep > 9 ? "00" : "0"}` };
+  }
+
+  // ---------- résultats ----------
+  // variante : le nombre de calculs, pour un calcul et un niveau donnés
+  const varianteDe = r => r.nombre + "|" + r.exo + "|" + r.niveau;
+  const resultatsDe = (pid, f) => resultats.filter(r => r.profil === pid && Object.keys(f).every(k => f[k] == null || r[k] === f[k]));
+  const taux = r => r.total ? r.justes / r.total : 0;
+
+  // ---------- synchronisation entre appareils (Google Apps Script) ----------
+  const CODE_SYNCHRO = "";
+  const normProfil = o => ({ id: String(o.id), nom: String(o.nom), animal: String(o.animal), couleur: String(o.couleur) });
+  const vide = v => v === "" || v == null;
+  const normResultat = o => ({
+    id: String(o.id), profil: String(o.profil), mode: String(o.mode),
+    duree: vide(o.duree) ? null : Number(o.duree), nombre: vide(o.nombre) ? null : Number(o.nombre),
+    exo: vide(o.exo) ? "plusmoins" : String(o.exo), niveau: Number(o.niveau) || 10,
+    justes: Number(o.justes) || 0, faux: Number(o.faux) || 0, total: Number(o.total) || 0, tempsMs: Number(o.tempsMs) || 0,
+    date: o.date instanceof Date ? o.date.toISOString() : String(o.date)
+  });
+  function fusionner(srv) {
+    const sup = new Set([...supprimes, ...srv.supprimes.map(String)]);
+    const P = new Map(), R = new Map();
+    [...srv.profils.map(normProfil), ...profils].forEach(p => { if (!P.has(p.id)) P.set(p.id, p); });
+    [...srv.resultats.map(normResultat), ...resultats].forEach(r => { if (!R.has(r.id)) R.set(r.id, r); });
+    // Même prénom créé sur deux appareils : on garde le profil le plus ancien et on regroupe les résultats
+    const alias = {}, garde = {};
+    const ps = [...P.values()].filter(p => !sup.has(p.id)).sort((a, b) => a.id < b.id ? -1 : 1).filter(p => {
+      const k = p.nom.trim().toLowerCase();
+      if (garde[k]) { alias[p.id] = garde[k].id; return false; }
+      garde[k] = p; return true;
+    });
+    const rs = [...R.values()].map(r => alias[r.profil] ? { ...r, profil: alias[r.profil] } : r)
+      .filter(r => !sup.has(r.profil)).sort((a, b) => a.date < b.date ? -1 : 1);
+    return { ps, rs, alias };
+  }
+  async function appelSynchro(corps) {
+    const rep = corps
+      ? await fetch(lienSynchro, { method: "POST", body: JSON.stringify(corps), redirect: "follow" })
+      : await fetch(lienSynchro + "?t=" + Date.now(), { cache: "no-store", redirect: "follow" });
+    const d = await rep.json();
+    if (!d || !d.ok) throw new Error("réponse");
+    return d;
+  }
+  // ---------- tri des résultats ----------
+  // Chaque jour à 6 h : on ne garde que le meilleur résultat de la veille (par enfant, nombre de calculs, calcul et niveau).
+  // Le 1er du mois à 6 h : on ne garde que les 5 meilleurs résultats du mois précédent.
+  // La règle ne dépend que des résultats eux-mêmes : tous les appareils arrivent au même tri.
+  const meilleurDabord = (a, b) => (taux(b) - taux(a)) || (a.tempsMs - b.tempsMs) || (a.date < b.date ? -1 : 1);
+  function compacter(liste, maintenant) {
+    const now = maintenant || new Date();
+    const finDuJour = d => new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, 6);   // lendemain 6 h
+    const finDuMois = d => new Date(d.getFullYear(), d.getMonth() + 1, 1, 6);            // 1er du mois suivant 6 h
+    const cle = r => r.profil + "|" + r.mode + "|" + varianteDe(r);
+    const regrouper = (l, k) => l.reduce((g, r) => { (g[k(r)] = g[k(r)] || []).push(r); return g; }, {});
+    // 1) un seul résultat par jour terminé
+    const jours = regrouper(liste, r => { const d = new Date(r.date); return finDuJour(d) <= now ? cle(r) + "|" + d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate() : "garder|" + r.id; });
+    const apresJour = Object.values(jours).map(g => g.sort(meilleurDabord)[0]);
+    // 2) cinq résultats par mois terminé
+    const mois = regrouper(apresJour, r => { const d = new Date(r.date); return finDuMois(d) <= now ? cle(r) + "|" + d.getFullYear() + "-" + d.getMonth() : "garder|" + r.id; });
+    const garde = new Set(Object.values(mois).flatMap(g => g.sort(meilleurDabord).slice(0, 5)).map(r => r.id));
+    return liste.filter(r => garde.has(r.id));
+  }
+  // Applique le tri sur cet appareil ; renvoie les identifiants retirés
+  function trierResultats() {
+    const avant = resultats;
+    resultats = compacter(resultats);
+    if (resultats.length === avant.length) return [];
+    sauverResultats();
+    const restants = new Set(resultats.map(r => r.id));
+    return avant.filter(r => !restants.has(r.id)).map(r => r.id);
+  }
+
+  // ---------- petits messages en bas de l'écran ----------
+  let minuteurToast = null;
+  function toast(texte) {
+    let t = document.getElementById("toast");
+    if (!t) { t = document.createElement("div"); t.id = "toast"; t.setAttribute("role", "status"); document.body.appendChild(t); }
+    t.textContent = texte; t.classList.add("visible");
+    clearTimeout(minuteurToast); minuteurToast = setTimeout(() => t.classList.remove("visible"), 3500);
+  }
+
+  let synchroEnCours = false, synchroRelance = false;
+  async function synchroniser() {
+    if (!lienSynchro) return;
+    if (synchroEnCours) { synchroRelance = true; return; }
+    synchroEnCours = true;
+    try {
+      let srv = await appelSynchro();
+      const ids = l => new Set(l.map(x => String(x.id)));
+      const sp = ids(srv.profils), sr = ids(srv.resultats), ss = new Set(srv.supprimes.map(String));
+      const envoi = { profils: profils.filter(p => !sp.has(p.id)), resultats: resultats.filter(r => !sr.has(r.id)), supprimes: supprimes.filter(id => !ss.has(id)) };
+      if (envoi.profils.length || envoi.resultats.length || envoi.supprimes.length) srv = await appelSynchro(envoi);
+      const avant = new Set(profils.map(p => p.id));
+      const { ps, rs, alias } = fusionner(srv);
+      profils = ps; resultats = rs; sauverProfils(); sauverResultats();
+      const retires = trierResultats();
+      const surServeur = new Set(srv.resultats.map(r => String(r.id)));
+      const aRetirer = retires.filter(id => surServeur.has(id));
+      if (aRetirer.length) appelSynchro({ profils: [], resultats: [], supprimes: [], retirer: aRetirer }).catch(() => {});
+      const nouveaux = profils.filter(p => !avant.has(p.id) && !Object.values(alias).includes(p.id));
+      if (nouveaux.length && avant.size) toast((nouveaux.length > 1 ? "Nouveaux profils : " : "Nouveau profil : ") + nouveaux.map(p => p.animal + " " + p.nom).join(", "));
+      if (profil) profil = profils.find(p => p.id === (alias[profil.id] || profil.id)) || null;
+      etatSynchro = { ok: true, date: new Date().toISOString(), texte: "" };
+    } catch (e) {
+      etatSynchro = { ok: false, date: etatSynchro && etatSynchro.date, texte: "Synchronisation impossible pour l'instant. Les résultats sont gardés sur cet appareil et seront envoyés plus tard." };
+    } finally {
+      ecrire("etatSynchro", etatSynchro);
+      synchroEnCours = false;
+      if (!profil && !["profils", "parents", "porte", "nouveau"].includes(ecran)) aller("profils");
+      else if (["profils", "parents", "progres", "calculs"].includes(ecran)) afficher();
+      if (synchroRelance) { synchroRelance = false; synchroniser(); }
+    }
+  }
+
+  // ---------- écrans ----------
+  function barre(gauche, titre, droite) {
+    return `<div class="barre">${gauche || '<span class="espace"></span>'}<div class="titre">${titre || ""}</div>${droite || '<span class="espace"></span>'}</div>`;
+  }
+  const retour = (action, label) => `<button class="rond" data-a="${action}" aria-label="${label || L("Retour", "Terug")}">⬅️</button>`;
+  const avatarProfil = p => `<span class="rond" style="background:${p.couleur}" aria-hidden="true">${p.animal}</span>`;
+
+  function vueProfils() {
+    const tuiles = profils.map(p => `
+      <button class="tuile" style="--c:${p.couleur}" data-a="choisirProfil" data-id="${p.id}">
+        <span class="avatar">${p.animal}</span><span class="nom">${esc(p.nom)}</span>
+      </button>`).join("");
+    const ajout = profils.length < MAX_PROFILS ? `<button class="tuile ajout" data-a="nouveauProfil"><span class="avatar">+</span><span class="nom">${L("Nouveau", "Nieuw")}</span></button>` : "";
+    return `
+      <header class="titre-app">${L("Compte avec moi", "Tel met mij")}</header>
+      <div class="centre">
+        <div class="entete"><h1>${L("Qui veut compter ?", "Wie wil er tellen?")}</h1><p>${profils.length ? L("Touche ton animal pour commencer", "Tik op je dier om te beginnen") : L("Crée ton profil pour commencer", "Maak je profiel om te beginnen")}</p></div>
+        <div class="grille-profils">${tuiles}${ajout}</div>
+      </div>
+      <div class="bas"><button class="lien-parents" data-a="ouvrirPorte">🔒 ${L("Espace parents", "Voor ouders")}</button></div>
+      <p class="copyright">© ${new Date().getFullYear()} Sillage Prod</p>
+      <p class="version">${L("Version", "Versie")} ${VERSION}${L("", "-NL")}</p>
+      ${versionEnLigne && versionEnLigne !== VERSION ? `<div class="bas"><button class="maj" data-a="mettreAJour">${L(`⬇️ Nouvelle version ${esc(versionEnLigne)} : touchez pour mettre à jour`, `⬇️ Nieuwe versie ${esc(versionEnLigne)}-NL: tik om bij te werken`)}</button></div>` : ""}`;
+  }
+
+  function vueNouveauProfil() {
+    const b = brouillon;
+    return `
+      ${barre(retour("versProfils"), `<h2>${L("Nouveau profil", "Nieuw profiel")}</h2>`)}
+      <div class="centre">
+        <div class="panneau">
+          <label class="etiquette" for="nomProfil">${L("Ton prénom", "Je voornaam")}</label>
+          <input id="nomProfil" type="text" maxlength="16" autocomplete="off" value="${esc(b.nom)}" placeholder="${L("Prénom", "Voornaam")}">
+          <div class="etiquette">${L("Ton animal", "Je dier")}</div>
+          <div class="choix-animaux">${ANIMAUX.map(a => `<button data-a="animal" data-v="${a}" aria-pressed="${a === b.animal}">${a}</button>`).join("")}</div>
+          <div class="etiquette">${L("Ta couleur", "Je kleur")}</div>
+          <div class="choix-couleurs">${COULEURS.map(c => `<button data-a="couleur" data-v="${c}" style="--c:${c}" aria-label="${L("Couleur", "Kleur")}" aria-pressed="${c === b.couleur}"></button>`).join("")}</div>
+          <button class="gros vert" data-a="creerProfil" id="btnCreer">${L("C'est moi ! ✓", "Dat ben ik! ✓")}</button>
+        </div>
+      </div>`;
+  }
+
+  function vueCalculs() {
+    const c = choixDe(profil);
+    const niveaux = NIVEAUX.map(n => `<button class="puce" data-a="niveau" data-v="${n}" aria-pressed="${n === c.niveau}">${n}</button>`).join("");
+    const tuiles = EXOS.map(e => `
+      <button class="tuile" style="--c:${e.c}" data-a="choisirExo" data-v="${e.id}">
+        <span class="avatar">${e.ico}</span><span class="nom">${e.nom}</span><span class="sous">${e.sous}</span>
+      </button>`).join("");
+    return `
+      ${barre(retour("versProfils", L("Changer de profil", "Ander profiel")), `<h2>${L(`Bonjour ${esc(profil.nom)} !`, `Dag ${esc(profil.nom)}!`)}</h2>`, avatarProfil(profil))}
+      <div class="centre">
+        <div class="niveaux"><span class="etiquette">${L("Jusqu'à", "Tot")}</span>${niveaux}</div>
+        <div class="grille-exos">${tuiles}</div>
+        <div class="bas"><button class="gros blanc" data-a="versProgres">📈 ${L("Mes progrès", "Mijn vooruitgang")}</button></div>
+      </div>`;
+  }
+
+  function vueNormal() {
+    if (!NOMBRES.includes(nombreChoisi)) nombreChoisi = 10;
+    const c = choixDe(profil);
+    const btns = NOMBRES.map(n => `<button class="duree" data-a="nombre" data-v="${n}" aria-pressed="${n === nombreChoisi}"><b>${n}</b><span>${L("calculs", "sommen")}</span></button>`).join("");
+    return `
+      ${barre(retour("versCalculs"), `<h2>${libelleCalcul(c.exo, c.niveau)}</h2>`, avatarProfil(profil))}
+      <div class="centre">
+        <div class="entete"><h1>${L("Combien de calculs ?", "Hoeveel sommen?")}</h1></div>
+        <div class="durees nombres">${btns}</div>
+        <div class="bas"><button class="gros vert" data-a="lancerNormal" style="min-width:260px">▶ Start</button></div>
+      </div>`;
+  }
+
+  function vueJeu() {
+    const p = partie;
+    const pastille = `<span class="pastille"><span id="compteur">${p.index + 1} / ${p.total}</span></span>`;
+    return `
+      <div class="jeu">
+        ${barre(`<button class="rond" data-a="arreter" id="btnArreter" aria-label="${L("Arrêter", "Stoppen")}">✖️</button>`, pastille, avatarProfil(profil))}
+        <div class="scene"><div class="cadre-mot entre" id="mot" data-a="ecouter"></div><div class="verdict" id="verdict"></div></div>
+        <div class="reponses">${[0, 1, 2].map(i => `<button class="rep" data-a="repondre" data-v="${i}" id="rep${i}"></button>`).join("")}</div>
+      </div>`;
+  }
+
+  function vueFin() {
+    const r = fin.resultat, prec = fin.precedent;
+    let medaille = "⭐", message = "", classe = "";
+    const morceaux = [];
+    if (!prec) message = L(`C'est ta première série de ${calculs(r.nombre)} !`, `Je eerste reeks van ${calculs(r.nombre)}!`);
+    else {
+      const mieuxJuste = taux(r) > taux(prec), pireJuste = taux(r) < taux(prec);
+      const plusRapide = r.tempsMs < prec.tempsMs - 1000, plusLent = r.tempsMs > prec.tempsMs + 1000;
+      if (mieuxJuste) morceaux.push(L("plus de bonnes réponses", "meer juiste antwoorden"));
+      if (plusRapide) { const t = tempsEnMots(prec.tempsMs - r.tempsMs); morceaux.push(L("plus rapide de " + t, t + " sneller")); }
+      if (mieuxJuste || (!pireJuste && plusRapide)) { message = L("Tu as fait mieux que la dernière fois : ", "Beter dan de vorige keer: ") + morceaux.join(L(" et ", " en ")) + L(" !", "!"); classe = "mieux"; medaille = "🏆"; }
+      else if (!pireJuste && !plusLent) message = L("Aussi bien que la dernière fois. Bien joué !", "Even goed als de vorige keer. Goed gedaan!");
+      else message = L(`La dernière fois : ${prec.justes} juste${prec.justes > 1 ? "s" : ""} sur ${prec.total} en ${tempsEnMots(prec.tempsMs)}. Continue, tu progresses !`, `De vorige keer: ${prec.justes} van de ${prec.total} juist in ${tempsEnMots(prec.tempsMs)}. Doe zo verder, je wordt steeds beter!`);
+    }
+    return `
+      <div class="fin">
+        <div class="medaille">${medaille}</div>
+        <h1 class="bravo">${L(`Bravo ${esc(profil.nom)} !`, `Bravo ${esc(profil.nom)}!`)}</h1>
+        ${fin.record ? `<span class="badge">${L("Nouveau record !", "Nieuw record!")}</span>` : ""}
+        <div class="cases">
+          <div class="case v"><b>${r.justes}</b><span>${L("juste" + (r.justes > 1 ? "s" : ""), "juist")} ✓</span></div>
+          <div class="case x"><b>${r.faux}</b><span>${L("faux", "fout")} ✗</span></div>
+          <div class="case t"><b>${mmss(r.tempsMs)}</b><span>${L("temps", "tijd")}</span></div>
+        </div>
+        <div class="message ${classe}">${message}</div>
+        <div class="actions"><button class="gros vert" data-a="lancerNormal">🔁 ${L("Rejouer", "Opnieuw")}</button><button class="gros blanc" data-a="versCalculs">🏠 Menu</button></div>
+      </div>`;
+  }
+
+  function grapheBarres(points, opts) {
+    // points: [{valeur, etiquette, sous, record}]
+    const n = points.length, pas = 74, gauche = 18, haut = 46, hauteur = 230, bas = 58;
+    const L = Math.max(240, gauche * 2 + n * pas), H = haut + hauteur + bas;
+    const max = Math.max(opts.max || 1, ...points.map(p => p.valeur));
+    const y = v => haut + hauteur - (v / max) * hauteur;
+    const lignes = [0.25, 0.5, 0.75, 1].map(f => `<line x1="${gauche}" x2="${L - gauche}" y1="${y(max * f)}" y2="${y(max * f)}" stroke="#d8f3ee" stroke-width="2" stroke-dasharray="6 6"/>`).join("");
+    const barres = points.map((p, i) => {
+      const cx = gauche + pas * i + pas / 2, w = 48, yb = y(p.valeur), h = Math.max(6, haut + hauteur - yb);
+      const c = COULEURS[i % COULEURS.length];
+      return `
+        <rect x="${cx - w / 2}" y="${haut + hauteur - h}" width="${w}" height="${h}" rx="14" fill="${c}"/>
+        <rect x="${cx - w / 2 + 8}" y="${haut + hauteur - h + 8}" width="10" height="${Math.max(0, h - 22)}" rx="5" fill="#ffffff" opacity=".35"/>
+        ${p.record ? `<text x="${cx}" y="${haut + hauteur - h - 30}" text-anchor="middle" font-size="24">⭐</text>` : ""}
+        <text x="${cx}" y="${haut + hauteur - h - 8}" text-anchor="middle" font-size="20" font-weight="700" fill="#243057">${p.etiquette}</text>
+        <text x="${cx}" y="${haut + hauteur + 26}" text-anchor="middle" font-size="16" fill="#5a6488">${p.date}</text>
+        ${p.sous ? `<text x="${cx}" y="${haut + hauteur + 48}" text-anchor="middle" font-size="15" font-weight="600" fill="#7176d6">${p.sous}</text>` : ""}`;
+    }).join("");
+    return `<svg viewBox="0 0 ${L} ${H}" width="${L}" style="max-width:none;width:${L}px" role="img" aria-label="${esc(opts.titre)}">
+      ${lignes}<line x1="${gauche}" x2="${L - gauche}" y1="${haut + hauteur}" y2="${haut + hauteur}" stroke="#243057" stroke-width="3" stroke-linecap="round"/>${barres}</svg>`;
+  }
+
+  function vueProgres() {
+    const v = etatProgres;
+    // Par défaut on montre le calcul, le niveau et le nombre de calculs de la dernière partie jouée
+    const tous = resultats.filter(r => r.profil === profil.id);
+    const dernier = tous[tous.length - 1], c = choixDe(profil);
+    if (v.exo == null) v.exo = dernier ? dernier.exo : c.exo;
+    if (v.niveau == null) v.niveau = dernier ? dernier.niveau : c.niveau;
+    const base = { exo: v.exo, niveau: v.niveau };
+    const derniers = resultatsDe(profil.id, base), dernierIci = derniers[derniers.length - 1];
+    if (v.nombre == null) v.nombre = dernierIci ? dernierIci.nombre : nombreChoisi;
+    const avecNombre = (label, n) => n ? `${label} <small>(${n})</small>` : label;
+    const pucesExo = EXOS.map(e => `<button class="puce exo" style="--c:${e.c}" data-a="progresExo" data-v="${e.id}" aria-pressed="${e.id === v.exo}">${avecNombre(e.ico + " " + e.nom, resultatsDe(profil.id, { exo: e.id, niveau: v.niveau }).length)}</button>`).join("");
+    const pucesNiveau = NIVEAUX.map(n => `<button class="puce normal" data-a="progresNiveau" data-v="${n}" aria-pressed="${n === v.niveau}">${avecNombre(L("jusqu'à ", "tot ") + n, resultatsDe(profil.id, { exo: v.exo, niveau: n }).length)}</button>`).join("");
+    let contenu = "";
+    {
+      const pucesN = NOMBRES.map(n => `<button class="puce normal" data-a="progresNombre" data-v="${n}" aria-pressed="${n === v.nombre}">${avecNombre(String(n), resultatsDe(profil.id, { ...base, nombre: n }).length)}</button>`).join("");
+      const liste = resultatsDe(profil.id, { ...base, nombre: v.nombre });
+      const meilleur = liste.reduce((m, r) => Math.max(m, Math.round(taux(r) * 100)), 0);
+      let rec = -1;
+      const points = liste.map(r => { const pc = Math.round(taux(r) * 100); const p = { valeur: pc, etiquette: pc + "%", date: dateCourte(r.date), sous: "⏱ " + mmss(r.tempsMs), record: pc > rec && pc === meilleur }; if (p.record) rec = pc; return p; });
+      const plusRapide = liste.length ? Math.min(...liste.map(r => r.tempsMs)) : 0;
+      contenu = `<div class="puces">${pucesN}</div>` + (liste.length
+        ? `<div class="resume"><div class="case v"><b>${meilleur}%</b><span>${L("meilleur score", "beste score")}</span></div><div class="case t"><b>${mmss(plusRapide)}</b><span>${L("plus rapide", "snelste")}</span></div><div class="case"><b>${liste.length}</b><span>${L("partie" + (liste.length > 1 ? "s" : ""), liste.length > 1 ? "spelletjes" : "spel")}</span></div></div>
+           <div class="graphe">${grapheBarres(points, { max: 100, titre: L("Pourcentage de bonnes réponses", "Percentage juiste antwoorden") })}</div>`
+        : `<div class="graphe"><div class="vide"><span class="ico">✏️</span>${L(`Pas encore de série de ${calculs(v.nombre)}.<br>Joue une partie pour voir ton score ici !`, `Nog geen reeks van ${calculs(v.nombre)}.<br>Speel een spel om je score hier te zien!`)}</div></div>`);
+    }
+    return `
+      ${barre(retour("versCalculs"), `<h2>${L(`Les progrès de ${esc(profil.nom)}`, `De vooruitgang van ${esc(profil.nom)}`)}</h2>`, avatarProfil(profil))}
+      <div class="parents" style="padding-top:12px">
+        <div class="puces">${pucesExo}</div>
+        <div class="puces">${pucesNiveau}</div>
+        ${contenu}
+      </div>`;
+  }
+
+  function vuePorte() {
+    return `
+      ${barre(retour("versProfils"), `<h2>${L("Espace parents", "Voor ouders")}</h2>`)}
+      <div class="centre"><div class="panneau porte">
+        <p class="etiquette">${L("Pour entrer, réponds à cette question :", "Beantwoord deze vraag om binnen te gaan:")}</p>
+        <div class="question">${porte.a} × ${porte.b} = ?</div>
+        <div class="ligne">${porte.choix.map(c => `<button class="gros blanc" data-a="porteRep" data-v="${c}">${c}</button>`).join("")}</div>
+      </div></div>`;
+  }
+
+  function vueParents() {
+    const lignesProfils = profils.map(p => {
+      const n = resultats.filter(r => r.profil === p.id).length;
+      return `
+      <div class="profil-ligne">${avatarProfil(p)}
+        <div class="qui"><span class="nom">${esc(p.nom)}</span><span class="aide">${n} ${L("partie" + (n > 1 ? "s" : ""), n === 1 ? "spel" : "spelletjes")}</span></div>
+        ${suppressionArmee === p.id ? "" : `<button class="btn-danger" data-a="supprimerProfil" data-id="${p.id}">${L("Supprimer", "Verwijderen")}</button>`}
+        ${suppressionArmee === p.id ? `
+        <div class="confirmer">
+          <p>${L(`Supprimer <b>${esc(p.nom)}</b> et ${n > 1 ? "ses " + n + " parties" : n ? "sa partie" : "son profil"} ?`, `<b>${esc(p.nom)}</b> en ${n > 1 ? "de " + n + " spelletjes" : n ? "het spel" : "het profiel"} verwijderen?`)}${lienSynchro ? " Ce sera aussi effacé sur les autres appareils." : ""}</p>
+          <div class="ligne"><button class="btn-danger arme" data-a="supprimerProfil" data-id="${p.id}">${L("Oui, supprimer", "Ja, verwijderen")}</button><button class="gros blanc petit" data-a="annulerSuppression">${L("Annuler", "Annuleren")}</button></div>
+        </div>` : ""}
+      </div>`;
+    }).join("") || `<p class="aide">${L("Aucun profil pour l'instant.", "Nog geen profielen.")}</p>`;
+    return `
+      ${barre(retour("versProfils"), `<h2>${L("Espace parents", "Voor ouders")}</h2>`)}
+      <div class="parents" style="padding-top:12px">
+        ${NL ? `<section class="panneau">
+          <h3>De sommen</h3>
+          <ul class="aide">
+            <li><b>🍎 Tellen</b>: voorwerpen tellen, per 5 gerangschikt zoals op de vingers (maximaal 20), of de zwarte stippen van een domino (maximaal 12).</li>
+            <li><b>🔢 De rij</b>: het ontbrekende getal vinden (3, 4, ?).</li>
+            <li><b>🧮 Plus en min</b>: optellen en aftrekken door elkaar; de uitkomst is nooit groter dan het gekozen niveau en nooit kleiner dan nul.</li>
+            <li><b>🤔 Het juiste teken</b>: twee getallen en de uitkomst (7 ? 3 = 4), het kind tikt op + of −.</li>
+            <li><b>🎲 Mix</b>: van alles wat (tellen, de rij, plus en min, het juiste teken).</li>
+          </ul>
+          <p class="aide">Het kind antwoordt zelf door op het juiste antwoord te tikken. Na een fout verschijnt het juiste antwoord in het groen. Als het kind op het kader tikt, leest de app de som voor.</p>
+          <p class="aide">Aangeraden niveaus: <b>tot 5 of 10</b> in de 3de kleuterklas, <b>tot 20</b> in het 1ste leerjaar, <b>tot 100</b> in het 2de leerjaar.</p>
+        </section>` : `<section class="panneau">
+          <h3>Les calculs</h3>
+          <ul class="aide">
+            <li><b>🍎 Compter</b> : des objets à compter, rangés par 5 comme sur les doigts (20 au maximum), ou les points noirs d'un domino (12 au maximum).</li>
+            <li><b>🔢 La suite</b> : trouver le nombre qui manque (3, 4, ?).</li>
+            <li><b>🧮 Plus et moins</b> : additions et soustractions mélangées ; le résultat ne dépasse jamais le niveau choisi et ne descend jamais sous zéro.</li>
+            <li><b>🤔 Le bon signe</b> : deux nombres et le résultat (7 ? 3 = 4), l'enfant touche + ou −.</li>
+            <li><b>🎲 Mélange</b> : un peu de tout (compter, la suite, plus et moins, le bon signe).</li>
+          </ul>
+          <p class="aide">L'enfant répond seul en touchant la bonne réponse. Après une erreur, la bonne réponse s'affiche en vert. En touchant le cadre, l'app lit le calcul à voix haute.</p>
+          <p class="aide">Niveaux conseillés : <b>jusqu'à 5 ou 10</b> en 3e maternelle, <b>jusqu'à 20</b> en 1re primaire, <b>jusqu'à 100</b> en 2e primaire.</p>
+        </section>`}
+
+        <section class="panneau">
+          <h3>${L("Profils", "Profielen")} (${profils.length}/${MAX_PROFILS})</h3>
+          <p class="aide">${L("Supprimer un profil efface aussi tous ses résultats.", "Als u een profiel verwijdert, worden ook alle resultaten ervan gewist.")}</p>
+          ${lignesProfils}
+        </section>
+
+        ${NL ? "" : `<section class="panneau">
+          <h3>Synchroniser l'iPad et l'iPhone</h3>
+          ${lienSynchro ? `
+            <p class="statut ${etatSynchro && !etatSynchro.ok ? "ko" : "ok"}">${etatSynchro && !etatSynchro.ok ? esc(etatSynchro.texte) : etatSynchro && etatSynchro.date ? "✓ Synchronisé le " + new Date(etatSynchro.date).toLocaleDateString("fr-BE") + " à " + new Date(etatSynchro.date).toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit" }) : "Connexion…"}</p>
+            <p class="aide">Les profils et les résultats sont partagés avec tous les appareils connectés au même lien.</p>
+            <div class="ligne"><button class="gros bleu petit" data-a="synchroMaintenant">🔄 Synchroniser maintenant</button><button class="btn-danger" data-a="deconnecterSynchro">Déconnecter</button></div>`
+          : `
+            <p class="aide">Pour retrouver les mêmes profils et progrès sur tous vos appareils (5 minutes, une seule fois, de préférence sur un ordinateur) :</p>
+            <ol class="aide">
+              <li>Créez un nouveau Google Sheet, par exemple « Compte avec moi – résultats » (pas celui de « Lis avec moi »).</li>
+              <li>Menu <b>Extensions → Apps Script</b>. Effacez le contenu et collez le code ci-dessous.</li>
+              <li><b>Déployer → Nouveau déploiement</b>, type <b>Application Web</b>. « Exécuter en tant que » : <b>Moi</b>, « Qui a accès » : <b>Tout le monde</b>. Cliquez sur Déployer et autorisez l'accès.</li>
+              <li>Copiez l'<b>URL de l'application Web</b> (elle finit par /exec) et collez-la ici, sur chaque appareil.</li>
+            </ol>
+            <div class="ligne"><button class="gros blanc petit" data-a="copierCode">📋 Copier le code</button></div>
+            <textarea id="codeSynchro" readonly hidden>${esc(CODE_SYNCHRO)}</textarea>
+            <div class="ligne">
+              <input id="lienSynchro" type="url" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off">
+              <button class="gros bleu petit" data-a="connecterSynchro">Connecter</button>
+            </div>
+            ${etatSynchro && !etatSynchro.ok ? `<p class="statut ko">${esc(etatSynchro.texte)}</p>` : ""}`}
+        </section>`}
+
+        <section class="panneau">
+          <h3>${L("Sons", "Geluid")}</h3>
+          <div class="ligne"><button class="gros petit ${sonActif ? "vert" : "blanc"}" data-a="son">${sonActif ? L("🔊 Sons activés", "🔊 Geluid aan") : L("🔇 Sons coupés", "🔇 Geluid uit")}</button></div>
+        </section>
+      </div>`;
+  }
+
+  // ---------- rendu ----------
+  function afficher() {
+    const vues = { profils: vueProfils, nouveau: vueNouveauProfil, calculs: vueCalculs, normal: vueNormal, jeu: vueJeu, fin: vueFin, progres: vueProgres, porte: vuePorte, parents: vueParents };
+    app.innerHTML = vues[ecran]();
+    if (ecran === "jeu") montrerCalcul();
+    if (ecran === "progres") { const g = app.querySelector(".graphe"); if (g) g.scrollLeft = g.scrollWidth; }
+    if (ecran === "nouveau") {
+      const champ = document.getElementById("nomProfil");
+      const maj = () => { brouillon.nom = champ.value; document.getElementById("btnCreer").disabled = !champ.value.trim(); };
+      champ.addEventListener("input", maj); maj();
+    }
+  }
+  const aller = e => { ecran = e; window.scrollTo(0, 0); afficher(); };
+
+  // ---------- partie ----------
+  let verrou = null;
+  async function garderEcranAllume() { try { verrou = await navigator.wakeLock.request("screen"); } catch (e) {} }
+  function lacherEcran() { try { verrou && verrou.release(); } catch (e) {} verrou = null; }
+
+  function demarrer() {
+    const c = choixDe(profil);
+    partie = {
+      nombre: nombreChoisi, exo: c.exo, niveau: c.niveau, recents: [], index: 0, total: nombreChoisi, q: null,
+      justes: 0, faux: 0, debut: Date.now(), occupe: false, arretArme: false
+    };
+    partie.q = calculSuivant(partie);
+    aller("jeu");
+    garderEcranAllume();
+  }
+  // le cadre garde toujours la même taille : on ajuste seulement la taille de son contenu
+  function tailleCalcul(el, q) {
+    const st = getComputedStyle(el);
+    const largeur = el.clientWidth - parseFloat(st.paddingLeft) - parseFloat(st.paddingRight), hauteur = el.clientHeight;
+    if (q.domino) return Math.max(16, Math.min(hauteur * 0.8 / 2.1, largeur / 4.4));
+    if (q.exo === "compter") {
+      const lignes = q.n > 5 ? 2 : 1, colonnes = q.n > 10 ? 10 : Math.min(q.n, 5), ecarts = q.n > 10 ? .5 : 0;
+      return Math.max(16, Math.min(hauteur * 0.8 / (lignes * 1.12), largeur / (colonnes * 1.15 + ecarts + .2)));
+    }
+    return Math.max(24, Math.min(hauteur * 0.62, largeur / (dessinCalcul(q).texte.length * 0.56 + 0.2)));
+  }
+  function montrerCalcul(reponse) {
+    const el = document.getElementById("mot");
+    if (!el || !partie) return;
+    const q = partie.q;
+    el.style.fontSize = tailleCalcul(el, q) + "px";
+    el.innerHTML = dessinCalcul(q, reponse).html;
+    if (reponse != null) return;
+    el.classList.remove("entre"); void el.offsetWidth; el.classList.add("entre");
+    [0, 1, 2].forEach(i => { const b = document.getElementById("rep" + i); b.textContent = q.choix[i] ?? ""; b.className = "rep"; b.hidden = i >= q.choix.length; });
+    app.querySelector(".reponses").classList.toggle("deux", q.choix.length === 2);
+    const c = document.getElementById("compteur"); if (c) c.textContent = (partie.index + 1) + " / " + partie.total;
+  }
+  function repondre(i) {
+    if (!partie || partie.occupe || i >= partie.q.choix.length) return;
+    partie.occupe = true;
+    const q = partie.q, juste = q.choix[i] === q.rep;
+    juste ? partie.justes++ : partie.faux++;
+    bip(juste ? "ok" : "ko");
+    // on colore la réponse touchée ; après une erreur, la bonne réponse s'allume aussi
+    document.getElementById("rep" + i).classList.add(juste ? "v" : "x");
+    if (!juste) document.getElementById("rep" + q.choix.indexOf(q.rep)).classList.add("v");
+    if (q.exo !== "compter") montrerCalcul(q.rep);
+    const v = document.getElementById("verdict");
+    v.className = "verdict " + (juste ? "ok" : "ko"); v.innerHTML = `<span>${juste ? "V" : "X"}</span>`;
+    setTimeout(() => {
+      if (!partie) return;
+      v.innerHTML = ""; partie.occupe = false;
+      partie.index++;
+      if (partie.index >= partie.total) return terminer();
+      partie.q = calculSuivant(partie);
+      montrerCalcul();
+    }, juste ? 650 : 1400);
+  }
+  function terminer() {
+    if (!partie) return;
+    lacherEcran();
+    const p = partie; partie = null;
+    const tempsMs = Date.now() - p.debut;
+    const r = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), profil: profil.id, mode: "normal", duree: null, nombre: p.nombre, exo: p.exo, niveau: p.niveau, justes: p.justes, faux: p.faux, total: p.justes + p.faux, tempsMs, date: new Date().toISOString() };
+    const anciens = resultatsDe(profil.id, { exo: p.exo, niveau: p.niveau, nombre: p.nombre });
+    const precedent = anciens[anciens.length - 1] || null;
+    const record = anciens.length > 0 && [...anciens, r].sort(meilleurDabord)[0] === r;
+    resultats.push(r); sauverResultats(); synchroniser();
+    fin = { resultat: r, precedent, record };
+    aller("fin");
+    const mieux = precedent && (taux(r) > taux(precedent) || (taux(r) === taux(precedent) && r.tempsMs < precedent.tempsMs - 1000));
+    const nom = profil.nom, pc = Math.round(taux(r) * 100);
+    const valeur = { valeur: pc, suffixe: " %", legende: L("de bonnes réponses", "juiste antwoorden") };
+    let delta = "";
+    if (precedent && mieux) {
+      if (pc > Math.round(taux(precedent) * 100)) delta = "+" + (pc - Math.round(taux(precedent) * 100)) + L(" % de bonnes réponses", " % juiste antwoorden");
+      else delta = tempsEnMots(precedent.tempsMs - r.tempsMs) + L(" plus rapide !", " sneller!");
+    }
+    if (record) grandeFete({ emoji: "🏆", titre: L("Nouveau record !", "Nieuw record!"), sous: L(nom + ", tu n'as jamais fait aussi bien. Tu es une vraie star !", nom + ", zo goed heb je het nog nooit gedaan. Je bent een echte ster!"), delta, parole: L("Bravo " + nom + " ! Nouveau record !", "Bravo " + nom + "! Nieuw record!"), ...valeur });
+    else if (mieux) grandeFete({ emoji: "🚀", titre: L("Super " + nom + " !", "Super " + nom + "!"), sous: L("Tu as fait mieux que la dernière fois. Continue comme ça !", "Beter dan de vorige keer. Doe zo verder!"), delta, parole: L("Super " + nom + " ! Tu as fait mieux que la dernière fois !", "Super " + nom + "! Beter dan de vorige keer!"), ...valeur });
+    else if (!precedent) grandeFete({ emoji: "🌟", titre: L("Bravo " + nom + " !", "Bravo " + nom + "!"), sous: L("Ta toute première partie : c'est un super début !", "Je allereerste spel: een super begin!"), parole: L("Bravo " + nom + " ! C'est un super début !", "Bravo " + nom + "! Een super begin!"), ...valeur });
+    else setTimeout(() => dire(L("Bravo " + nom + " !", "Bravo " + nom + "!")), 500);
+  }
+  function arreter() {
+    if (!partie) return;
+    if (!partie.arretArme) {
+      partie.arretArme = true;
+      const b = document.getElementById("btnArreter"); b.textContent = L("Sûr ?", "Zeker?"); b.style.fontSize = "18px"; b.style.background = "#ffe3e4";
+      setTimeout(() => { if (partie && partie.arretArme) { partie.arretArme = false; b.textContent = "✖️"; b.style.fontSize = ""; b.style.background = ""; } }, 2500);
+      return;
+    }
+    lacherEcran(); partie = null; aller("normal");
+  }
+
+  // ---------- actions ----------
+  const changerChoix = o => { choix[profil.id] = { ...choixDe(profil), ...o }; ecrire("choix", choix); };
+  const actions = {
+    versProfils() { profil = null; suppressionArmee = null; aller("profils"); synchroniser(); },
+    choisirProfil(el) { profil = profils.find(p => p.id === el.dataset.id); aller("calculs"); },
+    nouveauProfil() {
+      const pris = profils.map(p => p.animal);
+      brouillon = { nom: "", animal: ANIMAUX.find(a => !pris.includes(a)) || ANIMAUX[0], couleur: COULEURS[profils.length % COULEURS.length] };
+      aller("nouveau");
+      setTimeout(() => { const c = document.getElementById("nomProfil"); c && c.focus(); }, 50);
+    },
+    animal(el) { brouillon.animal = el.dataset.v; afficher(); },
+    couleur(el) { brouillon.couleur = el.dataset.v; afficher(); },
+    creerProfil() {
+      const nom = brouillon.nom.trim(); if (!nom || profils.length >= MAX_PROFILS) return;
+      profil = { id: "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), nom, animal: brouillon.animal, couleur: brouillon.couleur };
+      profils.push(profil); sauverProfils(); bip("ok"); aller("calculs"); synchroniser();
+    },
+    versCalculs() { aller("calculs"); },
+    niveau(el) { changerChoix({ niveau: Number(el.dataset.v) }); afficher(); },
+    choisirExo(el) { changerChoix({ exo: el.dataset.v }); aller("normal"); },
+    nombre(el) { nombreChoisi = Number(el.dataset.v); ecrire("nombre", nombreChoisi); afficher(); },
+    lancerNormal() { demarrer(); },
+    repondre(el) { repondre(Number(el.dataset.v)); },
+    ecouter() { if (partie) dire(partie.q.parole); },
+    arreter,
+    versProgres() { etatProgres = {}; aller("progres"); },
+    progresExo(el) { etatProgres = { exo: el.dataset.v, niveau: etatProgres.niveau }; afficher(); },
+    progresNiveau(el) { etatProgres = { exo: etatProgres.exo, niveau: Number(el.dataset.v) }; afficher(); },
+    progresNombre(el) { etatProgres.nombre = Number(el.dataset.v); afficher(); },
+    ouvrirPorte() {
+      const a = 2 + Math.floor(Math.random() * 7), b = 3 + Math.floor(Math.random() * 6), bon = a * b;
+      const choix = new Set([bon]); while (choix.size < 3) choix.add(bon + (Math.floor(Math.random() * 11) - 5) || bon + 7);
+      porte = { a, b, bon, choix: melanger([...choix]) };
+      aller("porte");
+    },
+    porteRep(el) { if (Number(el.dataset.v) === porte.bon) aller("parents"); else actions.ouvrirPorte(); },
+    async mettreAJour() {
+      try { const r = await navigator.serviceWorker.getRegistration(); if (r) await r.update(); } catch (e) {}
+      location.reload();
+    },
+    annulerSuppression() { suppressionArmee = null; afficher(); },
+    supprimerProfil(el) {
+      const id = el.dataset.id;
+      if (suppressionArmee !== id) { suppressionArmee = id; return afficher(); }
+      profils = profils.filter(p => p.id !== id); resultats = resultats.filter(r => r.profil !== id);
+      if (lienSynchro && !supprimes.includes(id)) { supprimes.push(id); ecrire("supprimes", supprimes); }
+      sauverProfils(); sauverResultats(); suppressionArmee = null; afficher(); synchroniser();
+    },
+    async connecterSynchro() {
+      const lien = document.getElementById("lienSynchro").value.trim();
+      if (!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec/.test(lien)) {
+        etatSynchro = { ok: false, date: null, texte: "Ce lien ne ressemble pas à un lien d'application Web Google (il doit finir par /exec)." };
+        return afficher();
+      }
+      lienSynchro = lien; ecrire("lienSynchro", lienSynchro);
+      etatSynchro = { ok: true, date: null, texte: "Connexion…" }; afficher();
+      await synchroniser();
+    },
+    synchroMaintenant() { synchroniser(); },
+    deconnecterSynchro() { lienSynchro = ""; ecrire("lienSynchro", ""); etatSynchro = null; ecrire("etatSynchro", null); afficher(); },
+    async copierCode(el) {
+      try { await navigator.clipboard.writeText(CODE_SYNCHRO); el.textContent = "✓ Code copié"; }
+      catch (e) { const t = document.getElementById("codeSynchro"); t.hidden = false; t.select(); el.textContent = "Sélectionnez et copiez le code ci-dessous"; }
+    },
+    son() { sonActif = !sonActif; ecrire("son", sonActif); afficher(); }
+  };
+
+  app.addEventListener("click", e => {
+    const el = e.target.closest("[data-a]");
+    if (!el || el.disabled) return;
+    const f = actions[el.dataset.a]; if (f) f(el);
+  });
+  document.addEventListener("keydown", e => {
+    if (ecran !== "jeu") return;
+    if (["1", "2", "3"].includes(e.key)) repondre(Number(e.key) - 1);
+  });
+  addEventListener("resize", () => { if (ecran === "jeu" && partie && !partie.occupe) montrerCalcul(); });
+  // À chaque ouverture (et à chaque retour dans l'app) : tri des résultats, nouveaux profils, nouvelle version
+  async function verifierVersion() {
+    try {
+      const rep = await fetch("version.json?t=" + Date.now(), { cache: "no-store" });
+      const d = await rep.json();
+      versionEnLigne = String(d.version);
+      if (ecran === "profils") afficher();
+    } catch (e) {}
+  }
+  function verifier() {
+    verifierVersion();
+    if (trierResultats().length && ["progres", "calculs"].includes(ecran)) afficher();
+    synchroniser();
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState !== "visible") return;
+    if (partie) garderEcranAllume(); else verifier();
+  });
+
+  afficher();
+  verifier();
+})();
+</script>
+
+<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
+</body>
+</html>

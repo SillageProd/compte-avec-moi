@@ -329,36 +329,45 @@ textarea { min-height: 150px; resize: vertical; }
 (() => {
   "use strict";
 
+  // ---------- édition ----------
+  // « famille » = version de Robin (FR, avec synchronisation)
+  // « partage » = version néerlandaise « Tel met mij » pour les autres parents (produite par build.py)
+  const EDITION = "famille";
+  const NL = EDITION === "partage";
+  const L = (fr, nl) => NL ? nl : fr;   // texte selon la langue de l'édition
+
   // ---------- stockage ----------
-  const PREFIXE = "cam_";
+  const PREFIXE = L("cam_", "tmm_");
   const lire = (cle, defaut) => { try { const v = localStorage.getItem(PREFIXE + cle); return v ? JSON.parse(v) : defaut; } catch (e) { return defaut; } };
   const ecrire = (cle, val) => { try { localStorage.setItem(PREFIXE + cle, JSON.stringify(val)); } catch (e) {} };
 
   const MAX_PROFILS = 6;
   // Numéro de version (MAJEUR.MINEUR.CORRECTIF) : à augmenter à chaque mise en ligne
-  const VERSION = "1.5.0";
+  const VERSION = "1.6.0";
   let versionEnLigne = null;   // version publiée sur le site, lue dans version.json
   const ANIMAUX = ["🦁", "🐸", "🐼", "🦊", "🐰", "🐙", "🐢", "🦄", "🐶", "🐱", "🐵", "🐧", "🐨", "🐯", "🦖", "🐝"];
   const COULEURS = ["#f2545b", "#ff8a3d", "#ffb627", "#22b573", "#3aa8e0", "#7176d6", "#d465c2"];
 
   // ---------- les calculs ----------
   const EXOS = [
-    { id: "compter", ico: "🍎", nom: "Compter", sous: "Combien y en a-t-il\u00a0?", c: "#ff8a3d" },
-    { id: "suite", ico: "🔢", nom: "La suite", sous: "Quel nombre manque\u00a0?", c: "#3aa8e0" },
-    { id: "plusmoins", ico: "🧮", nom: "Plus et moins", sous: "Additions et soustractions", c: "#7176d6" },
-    { id: "signe", ico: "🤔", nom: "Le bon signe", sous: "Plus ou moins\u00a0?", c: "#22b573" },
-    { id: "melange", ico: "🎲", nom: "Mélange", sous: "Un peu de tout", c: "#ffb627" }
+    { id: "compter", ico: "🍎", nom: L("Compter", "Tellen"), sous: L("Combien y en a-t-il\u00a0?", "Hoeveel zijn er?"), c: "#ff8a3d" },
+    { id: "suite", ico: "🔢", nom: L("La suite", "De rij"), sous: L("Quel nombre manque\u00a0?", "Welk getal ontbreekt?"), c: "#3aa8e0" },
+    { id: "plusmoins", ico: "🧮", nom: L("Plus et moins", "Plus en min"), sous: L("Additions et soustractions", "Optellen en aftrekken"), c: "#7176d6" },
+    { id: "signe", ico: "🤔", nom: L("Le bon signe", "Het juiste teken"), sous: L("Plus ou moins\u00a0?", "Plus of min?"), c: "#22b573" },
+    { id: "melange", ico: "🎲", nom: L("Mélange", "Mix"), sous: L("Un peu de tout", "Van alles wat"), c: "#ffb627" }
   ];
   const exoDe = id => EXOS.find(e => e.id === id) || EXOS[2];
   const NIVEAUX = [5, 10, 20, 100];        // « jusqu'à … »
   const MAX_OBJETS = 20;                   // on ne compte jamais plus de 20 objets
-  const OBJETS = [["🍎", "pommes"], ["⭐", "étoiles"], ["🐞", "coccinelles"], ["🎈", "ballons"], ["🐟", "poissons"], ["🌸", "fleurs"], ["🚗", "voitures"], ["🍓", "fraises"], ["🐥", "poussins"], ["🍪", "biscuits"]];
+  const OBJETS = NL
+    ? [["🍎", "appels"], ["⭐", "sterren"], ["🐞", "lieveheersbeestjes"], ["🎈", "ballonnen"], ["🐟", "vissen"], ["🌸", "bloemen"], ["🚗", "auto's"], ["🍓", "aardbeien"], ["🐥", "kuikens"], ["🍪", "koekjes"]]
+    : [["🍎", "pommes"], ["⭐", "étoiles"], ["🐞", "coccinelles"], ["🎈", "ballons"], ["🐟", "poissons"], ["🌸", "fleurs"], ["🚗", "voitures"], ["🍓", "fraises"], ["🐥", "poussins"], ["🍪", "biscuits"]];
 
   let profils = lire("profils", []);
   let resultats = lire("resultats", []);
   let choix = lire("choix", {});                   // dernier calcul et niveau choisis, par profil
   let sonActif = lire("son", true);
-  let lienSynchro = lire("lienSynchro", "");
+  let lienSynchro = NL ? "" : lire("lienSynchro", "");
   let supprimes = lire("supprimes", []);           // profils supprimés, à transmettre aux autres appareils
   let etatSynchro = lire("etatSynchro", null);     // { ok, date, texte }
 
@@ -380,14 +389,14 @@ textarea { min-height: 150px; resize: vertical; }
   const mmss = ms => { const s = Math.max(0, Math.round(ms / 1000)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
   const tempsEnMots = ms => {
     const s = Math.max(0, Math.round(ms / 1000)), m = Math.floor(s / 60), r = s % 60;
-    if (!m) return r + " seconde" + (r > 1 ? "s" : "");
+    if (!m) return r + L(" seconde" + (r > 1 ? "s" : ""), r === 1 ? " seconde" : " seconden");
     return m + " min" + (r ? " " + String(r).padStart(2, "0") + " s" : "");
   };
   const dateCourte = iso => { const d = new Date(iso); return String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0"); };
   const NOMBRES = [5, 10, 15, 20, 30, 50];
-  const calculs = n => n + " calcul" + (n > 1 ? "s" : "");
+  const calculs = n => n + L(" calcul" + (n > 1 ? "s" : ""), n === 1 ? " som" : " sommen");
   const choixDe = p => { const c = { exo: "plusmoins", niveau: 10, ...(choix[p.id] || {}) }; if (!EXOS.some(e => e.id === c.exo)) c.exo = "plusmoins"; return c; };
-  const libelleCalcul = (exo, niveau) => exoDe(exo).ico + " " + exoDe(exo).nom + " · jusqu'à " + niveau;
+  const libelleCalcul = (exo, niveau) => exoDe(exo).ico + " " + exoDe(exo).nom + L(" · jusqu'à ", " · tot ") + niveau;
   const sauverProfils = () => ecrire("profils", profils);
   const sauverResultats = () => ecrire("resultats", resultats);
 
@@ -429,8 +438,8 @@ textarea { min-height: 150px; resize: vertical; }
     if (!sonActif || !window.speechSynthesis) return;
     try {
       const u = new SpeechSynthesisUtterance(texte);
-      u.lang = "fr-FR"; u.rate = .95; u.pitch = 1.2;
-      const voix = speechSynthesis.getVoices().find(v => v.lang === u.lang) || speechSynthesis.getVoices().find(v => v.lang.slice(0, 2) === "fr"); if (voix) u.voice = voix;
+      u.lang = L("fr-FR", "nl-BE"); u.rate = .95; u.pitch = 1.2;
+      const voix = speechSynthesis.getVoices().find(v => v.lang === u.lang) || speechSynthesis.getVoices().find(v => v.lang.slice(0, 2) === u.lang.slice(0, 2)); if (voix) u.voice = voix;
       speechSynthesis.cancel(); speechSynthesis.speak(u);
     } catch (e) {}
   }
@@ -504,7 +513,7 @@ textarea { min-height: 150px; resize: vertical; }
         <div class="fete-extra"><span class="fete-grand" data-cible="${o.valeur}" data-suffixe="${o.suffixe || ""}">0${o.suffixe || ""}</span><span class="fete-legende">${esc(o.legende)}</span></div>
         ${o.delta ? `<div class="fete-delta">${esc(o.delta)}</div>` : ""}
         <p class="fete-sous">${esc(o.sous)}</p>
-        <p class="fete-touche">Touche l'écran pour continuer</p>
+        <p class="fete-touche">${L("Touche l'écran pour continuer", "Tik op het scherm om verder te gaan")}</p>
       </div>`;
     document.body.appendChild(f);
     // le score monte de 0 à sa valeur
@@ -534,24 +543,24 @@ textarea { min-height: 150px; resize: vertical; }
     if (exo === "signe") {
       // deux nombres et le résultat : l'enfant choisit + ou −
       const c = nouveauCalcul(hasard(0, 1) ? "plus" : "moins", niveau);
-      return { exo, a: c.a, b: c.b, res: c.rep, rep: c.signe, choix: ["+", "−"], parole: c.a + " … " + c.b + " égale " + c.rep + ". Plus ou moins ?", cle: c.cle };
+      return { exo, a: c.a, b: c.b, res: c.rep, rep: c.signe, choix: ["+", "−"], parole: c.a + " … " + c.b + L(" égale ", " is ") + c.rep + L(". Plus ou moins ?", ". Plus of min?"), cle: c.cle };
     }
     if (exo === "compter" && hasard(0, 9) < 4) {
       // un domino : on compte les points noirs des deux moitiés (6 au plus par moitié)
       const n = hasard(1, Math.min(niveau, 12)), g = hasard(Math.max(0, n - 6), Math.min(6, n));
-      q = { exo, domino: [g, n - g], n, rep: n, parole: "Combien de points noirs sur le domino ?", cle: "d" + g + "-" + (n - g) };
+      q = { exo, domino: [g, n - g], n, rep: n, parole: L("Combien de points noirs sur le domino ?", "Hoeveel zwarte stippen staan er op de domino?"), cle: "d" + g + "-" + (n - g) };
     } else if (exo === "compter") {
       const n = hasard(1, Math.min(niveau, MAX_OBJETS)), [objet, nom] = OBJETS[hasard(0, OBJETS.length - 1)];
-      q = { exo, n, objet, rep: n, parole: "Combien y a-t-il de " + nom + " ?", cle: "c" + n };
+      q = { exo, n, objet, rep: n, parole: L("Combien y a-t-il de " + nom + " ?", "Hoeveel " + nom + " zijn er?"), cle: "c" + n };
     } else if (exo === "suite") {
       const d = hasard(0, Math.max(0, niveau - 2)), trou = hasard(0, 2), nombres = [d, d + 1, d + 2];
-      q = { exo, nombres, trou, rep: nombres[trou], parole: "Quel nombre manque ? " + nombres.map((n, i) => i === trou ? "…" : n).join(", "), cle: "s" + d + "-" + trou };
+      q = { exo, nombres, trou, rep: nombres[trou], parole: L("Quel nombre manque ? ", "Welk getal ontbreekt? ") + nombres.map((n, i) => i === trou ? "…" : n).join(", "), cle: "s" + d + "-" + trou };
     } else if (exo === "plus") {
       const total = hasard(2, niveau), a = hasard(1, total - 1);
       q = { exo, a, b: total - a, signe: "+", rep: total, parole: a + " plus " + (total - a), cle: a + "+" + (total - a) };
     } else {
       const a = hasard(2, niveau), b = hasard(1, a - 1);
-      q = { exo, a, b, signe: "−", rep: a - b, parole: a + " moins " + b, cle: a + "-" + b };
+      q = { exo, a, b, signe: "−", rep: a - b, parole: a + L(" moins ", " min ") + b, cle: a + "-" + b };
     }
     // deux réponses fausses tout près de la bonne, jamais en dessous de 0 (de 1 pour compter)
     const min = q.exo === "compter" ? 1 : 0;
@@ -703,7 +712,7 @@ textarea { min-height: 150px; resize: vertical; }
   function barre(gauche, titre, droite) {
     return `<div class="barre">${gauche || '<span class="espace"></span>'}<div class="titre">${titre || ""}</div>${droite || '<span class="espace"></span>'}</div>`;
   }
-  const retour = (action, label) => `<button class="rond" data-a="${action}" aria-label="${label || "Retour"}">⬅️</button>`;
+  const retour = (action, label) => `<button class="rond" data-a="${action}" aria-label="${label || L("Retour", "Terug")}">⬅️</button>`;
   const avatarProfil = p => `<span class="rond" style="background:${p.couleur}" aria-hidden="true">${p.animal}</span>`;
 
   function vueProfils() {
@@ -711,32 +720,32 @@ textarea { min-height: 150px; resize: vertical; }
       <button class="tuile" style="--c:${p.couleur}" data-a="choisirProfil" data-id="${p.id}">
         <span class="avatar">${p.animal}</span><span class="nom">${esc(p.nom)}</span>
       </button>`).join("");
-    const ajout = profils.length < MAX_PROFILS ? `<button class="tuile ajout" data-a="nouveauProfil"><span class="avatar">+</span><span class="nom">Nouveau</span></button>` : "";
+    const ajout = profils.length < MAX_PROFILS ? `<button class="tuile ajout" data-a="nouveauProfil"><span class="avatar">+</span><span class="nom">${L("Nouveau", "Nieuw")}</span></button>` : "";
     return `
-      <header class="titre-app">Compte avec moi</header>
+      <header class="titre-app">${L("Compte avec moi", "Tel met mij")}</header>
       <div class="centre">
-        <div class="entete"><h1>Qui veut compter ?</h1><p>${profils.length ? "Touche ton animal pour commencer" : "Crée ton profil pour commencer"}</p></div>
+        <div class="entete"><h1>${L("Qui veut compter ?", "Wie wil er tellen?")}</h1><p>${profils.length ? L("Touche ton animal pour commencer", "Tik op je dier om te beginnen") : L("Crée ton profil pour commencer", "Maak je profiel om te beginnen")}</p></div>
         <div class="grille-profils">${tuiles}${ajout}</div>
       </div>
-      <div class="bas"><button class="lien-parents" data-a="ouvrirPorte">🔒 Espace parents</button></div>
+      <div class="bas"><button class="lien-parents" data-a="ouvrirPorte">🔒 ${L("Espace parents", "Voor ouders")}</button></div>
       <p class="copyright">© ${new Date().getFullYear()} Sillage Prod</p>
-      <p class="version">Version ${VERSION}</p>
-      ${versionEnLigne && versionEnLigne !== VERSION ? `<div class="bas"><button class="maj" data-a="mettreAJour">⬇️ Nouvelle version ${esc(versionEnLigne)} : touchez pour mettre à jour</button></div>` : ""}`;
+      <p class="version">${L("Version", "Versie")} ${VERSION}${L("", "-NL")}</p>
+      ${versionEnLigne && versionEnLigne !== VERSION ? `<div class="bas"><button class="maj" data-a="mettreAJour">${L(`⬇️ Nouvelle version ${esc(versionEnLigne)} : touchez pour mettre à jour`, `⬇️ Nieuwe versie ${esc(versionEnLigne)}-NL: tik om bij te werken`)}</button></div>` : ""}`;
   }
 
   function vueNouveauProfil() {
     const b = brouillon;
     return `
-      ${barre(retour("versProfils"), `<h2>Nouveau profil</h2>`)}
+      ${barre(retour("versProfils"), `<h2>${L("Nouveau profil", "Nieuw profiel")}</h2>`)}
       <div class="centre">
         <div class="panneau">
-          <label class="etiquette" for="nomProfil">Ton prénom</label>
-          <input id="nomProfil" type="text" maxlength="16" autocomplete="off" value="${esc(b.nom)}" placeholder="Prénom">
-          <div class="etiquette">Ton animal</div>
+          <label class="etiquette" for="nomProfil">${L("Ton prénom", "Je voornaam")}</label>
+          <input id="nomProfil" type="text" maxlength="16" autocomplete="off" value="${esc(b.nom)}" placeholder="${L("Prénom", "Voornaam")}">
+          <div class="etiquette">${L("Ton animal", "Je dier")}</div>
           <div class="choix-animaux">${ANIMAUX.map(a => `<button data-a="animal" data-v="${a}" aria-pressed="${a === b.animal}">${a}</button>`).join("")}</div>
-          <div class="etiquette">Ta couleur</div>
-          <div class="choix-couleurs">${COULEURS.map(c => `<button data-a="couleur" data-v="${c}" style="--c:${c}" aria-label="Couleur" aria-pressed="${c === b.couleur}"></button>`).join("")}</div>
-          <button class="gros vert" data-a="creerProfil" id="btnCreer">C'est moi ! ✓</button>
+          <div class="etiquette">${L("Ta couleur", "Je kleur")}</div>
+          <div class="choix-couleurs">${COULEURS.map(c => `<button data-a="couleur" data-v="${c}" style="--c:${c}" aria-label="${L("Couleur", "Kleur")}" aria-pressed="${c === b.couleur}"></button>`).join("")}</div>
+          <button class="gros vert" data-a="creerProfil" id="btnCreer">${L("C'est moi ! ✓", "Dat ben ik! ✓")}</button>
         </div>
       </div>`;
   }
@@ -749,22 +758,22 @@ textarea { min-height: 150px; resize: vertical; }
         <span class="avatar">${e.ico}</span><span class="nom">${e.nom}</span><span class="sous">${e.sous}</span>
       </button>`).join("");
     return `
-      ${barre(retour("versProfils", "Changer de profil"), `<h2>Bonjour ${esc(profil.nom)} !</h2>`, avatarProfil(profil))}
+      ${barre(retour("versProfils", L("Changer de profil", "Ander profiel")), `<h2>${L(`Bonjour ${esc(profil.nom)} !`, `Dag ${esc(profil.nom)}!`)}</h2>`, avatarProfil(profil))}
       <div class="centre">
-        <div class="niveaux"><span class="etiquette">Jusqu'à</span>${niveaux}</div>
+        <div class="niveaux"><span class="etiquette">${L("Jusqu'à", "Tot")}</span>${niveaux}</div>
         <div class="grille-exos">${tuiles}</div>
-        <div class="bas"><button class="gros blanc" data-a="versProgres">📈 Mes progrès</button></div>
+        <div class="bas"><button class="gros blanc" data-a="versProgres">📈 ${L("Mes progrès", "Mijn vooruitgang")}</button></div>
       </div>`;
   }
 
   function vueNormal() {
     if (!NOMBRES.includes(nombreChoisi)) nombreChoisi = 10;
     const c = choixDe(profil);
-    const btns = NOMBRES.map(n => `<button class="duree" data-a="nombre" data-v="${n}" aria-pressed="${n === nombreChoisi}"><b>${n}</b><span>calculs</span></button>`).join("");
+    const btns = NOMBRES.map(n => `<button class="duree" data-a="nombre" data-v="${n}" aria-pressed="${n === nombreChoisi}"><b>${n}</b><span>${L("calculs", "sommen")}</span></button>`).join("");
     return `
       ${barre(retour("versCalculs"), `<h2>${libelleCalcul(c.exo, c.niveau)}</h2>`, avatarProfil(profil))}
       <div class="centre">
-        <div class="entete"><h1>Combien de calculs ?</h1></div>
+        <div class="entete"><h1>${L("Combien de calculs ?", "Hoeveel sommen?")}</h1></div>
         <div class="durees nombres">${btns}</div>
         <div class="bas"><button class="gros vert" data-a="lancerNormal" style="min-width:260px">▶ Start</button></div>
       </div>`;
@@ -775,7 +784,7 @@ textarea { min-height: 150px; resize: vertical; }
     const pastille = `<span class="pastille"><span id="compteur">${p.index + 1} / ${p.total}</span></span>`;
     return `
       <div class="jeu">
-        ${barre(`<button class="rond" data-a="arreter" id="btnArreter" aria-label="Arrêter">✖️</button>`, pastille, avatarProfil(profil))}
+        ${barre(`<button class="rond" data-a="arreter" id="btnArreter" aria-label="${L("Arrêter", "Stoppen")}">✖️</button>`, pastille, avatarProfil(profil))}
         <div class="scene"><div class="cadre-mot entre" id="mot" data-a="ecouter"></div><div class="verdict" id="verdict"></div></div>
         <div class="reponses">${[0, 1, 2].map(i => `<button class="rep" data-a="repondre" data-v="${i}" id="rep${i}"></button>`).join("")}</div>
       </div>`;
@@ -785,28 +794,28 @@ textarea { min-height: 150px; resize: vertical; }
     const r = fin.resultat, prec = fin.precedent;
     let medaille = "⭐", message = "", classe = "";
     const morceaux = [];
-    if (!prec) message = `C'est ta première série de ${calculs(r.nombre)} !`;
+    if (!prec) message = L(`C'est ta première série de ${calculs(r.nombre)} !`, `Je eerste reeks van ${calculs(r.nombre)}!`);
     else {
       const mieuxJuste = taux(r) > taux(prec), pireJuste = taux(r) < taux(prec);
       const plusRapide = r.tempsMs < prec.tempsMs - 1000, plusLent = r.tempsMs > prec.tempsMs + 1000;
-      if (mieuxJuste) morceaux.push("plus de bonnes réponses");
-      if (plusRapide) morceaux.push("plus rapide de " + tempsEnMots(prec.tempsMs - r.tempsMs));
-      if (mieuxJuste || (!pireJuste && plusRapide)) { message = "Tu as fait mieux que la dernière fois : " + morceaux.join(" et ") + " !"; classe = "mieux"; medaille = "🏆"; }
-      else if (!pireJuste && !plusLent) message = "Aussi bien que la dernière fois. Bien joué !";
-      else message = `La dernière fois : ${prec.justes} juste${prec.justes > 1 ? "s" : ""} sur ${prec.total} en ${tempsEnMots(prec.tempsMs)}. Continue, tu progresses !`;
+      if (mieuxJuste) morceaux.push(L("plus de bonnes réponses", "meer juiste antwoorden"));
+      if (plusRapide) { const t = tempsEnMots(prec.tempsMs - r.tempsMs); morceaux.push(L("plus rapide de " + t, t + " sneller")); }
+      if (mieuxJuste || (!pireJuste && plusRapide)) { message = L("Tu as fait mieux que la dernière fois : ", "Beter dan de vorige keer: ") + morceaux.join(L(" et ", " en ")) + L(" !", "!"); classe = "mieux"; medaille = "🏆"; }
+      else if (!pireJuste && !plusLent) message = L("Aussi bien que la dernière fois. Bien joué !", "Even goed als de vorige keer. Goed gedaan!");
+      else message = L(`La dernière fois : ${prec.justes} juste${prec.justes > 1 ? "s" : ""} sur ${prec.total} en ${tempsEnMots(prec.tempsMs)}. Continue, tu progresses !`, `De vorige keer: ${prec.justes} van de ${prec.total} juist in ${tempsEnMots(prec.tempsMs)}. Doe zo verder, je wordt steeds beter!`);
     }
     return `
       <div class="fin">
         <div class="medaille">${medaille}</div>
-        <h1 class="bravo">Bravo ${esc(profil.nom)} !</h1>
-        ${fin.record ? `<span class="badge">Nouveau record !</span>` : ""}
+        <h1 class="bravo">${L(`Bravo ${esc(profil.nom)} !`, `Bravo ${esc(profil.nom)}!`)}</h1>
+        ${fin.record ? `<span class="badge">${L("Nouveau record !", "Nieuw record!")}</span>` : ""}
         <div class="cases">
-          <div class="case v"><b>${r.justes}</b><span>juste${r.justes > 1 ? "s" : ""} ✓</span></div>
-          <div class="case x"><b>${r.faux}</b><span>faux ✗</span></div>
-          <div class="case t"><b>${mmss(r.tempsMs)}</b><span>temps</span></div>
+          <div class="case v"><b>${r.justes}</b><span>${L("juste" + (r.justes > 1 ? "s" : ""), "juist")} ✓</span></div>
+          <div class="case x"><b>${r.faux}</b><span>${L("faux", "fout")} ✗</span></div>
+          <div class="case t"><b>${mmss(r.tempsMs)}</b><span>${L("temps", "tijd")}</span></div>
         </div>
         <div class="message ${classe}">${message}</div>
-        <div class="actions"><button class="gros vert" data-a="lancerNormal">🔁 Rejouer</button><button class="gros blanc" data-a="versCalculs">🏠 Menu</button></div>
+        <div class="actions"><button class="gros vert" data-a="lancerNormal">🔁 ${L("Rejouer", "Opnieuw")}</button><button class="gros blanc" data-a="versCalculs">🏠 Menu</button></div>
       </div>`;
   }
 
@@ -844,7 +853,7 @@ textarea { min-height: 150px; resize: vertical; }
     if (v.nombre == null) v.nombre = dernierIci ? dernierIci.nombre : nombreChoisi;
     const avecNombre = (label, n) => n ? `${label} <small>(${n})</small>` : label;
     const pucesExo = EXOS.map(e => `<button class="puce exo" style="--c:${e.c}" data-a="progresExo" data-v="${e.id}" aria-pressed="${e.id === v.exo}">${avecNombre(e.ico + " " + e.nom, resultatsDe(profil.id, { exo: e.id, niveau: v.niveau }).length)}</button>`).join("");
-    const pucesNiveau = NIVEAUX.map(n => `<button class="puce normal" data-a="progresNiveau" data-v="${n}" aria-pressed="${n === v.niveau}">${avecNombre("jusqu'à " + n, resultatsDe(profil.id, { exo: v.exo, niveau: n }).length)}</button>`).join("");
+    const pucesNiveau = NIVEAUX.map(n => `<button class="puce normal" data-a="progresNiveau" data-v="${n}" aria-pressed="${n === v.niveau}">${avecNombre(L("jusqu'à ", "tot ") + n, resultatsDe(profil.id, { exo: v.exo, niveau: n }).length)}</button>`).join("");
     let contenu = "";
     {
       const pucesN = NOMBRES.map(n => `<button class="puce normal" data-a="progresNombre" data-v="${n}" aria-pressed="${n === v.nombre}">${avecNombre(String(n), resultatsDe(profil.id, { ...base, nombre: n }).length)}</button>`).join("");
@@ -854,12 +863,12 @@ textarea { min-height: 150px; resize: vertical; }
       const points = liste.map(r => { const pc = Math.round(taux(r) * 100); const p = { valeur: pc, etiquette: pc + "%", date: dateCourte(r.date), sous: "⏱ " + mmss(r.tempsMs), record: pc > rec && pc === meilleur }; if (p.record) rec = pc; return p; });
       const plusRapide = liste.length ? Math.min(...liste.map(r => r.tempsMs)) : 0;
       contenu = `<div class="puces">${pucesN}</div>` + (liste.length
-        ? `<div class="resume"><div class="case v"><b>${meilleur}%</b><span>meilleur score</span></div><div class="case t"><b>${mmss(plusRapide)}</b><span>plus rapide</span></div><div class="case"><b>${liste.length}</b><span>partie${liste.length > 1 ? "s" : ""}</span></div></div>
-           <div class="graphe">${grapheBarres(points, { max: 100, titre: "Pourcentage de bonnes réponses" })}</div>`
-        : `<div class="graphe"><div class="vide"><span class="ico">✏️</span>Pas encore de série de ${calculs(v.nombre)}.<br>Joue une partie pour voir ton score ici !</div></div>`);
+        ? `<div class="resume"><div class="case v"><b>${meilleur}%</b><span>${L("meilleur score", "beste score")}</span></div><div class="case t"><b>${mmss(plusRapide)}</b><span>${L("plus rapide", "snelste")}</span></div><div class="case"><b>${liste.length}</b><span>${L("partie" + (liste.length > 1 ? "s" : ""), liste.length > 1 ? "spelletjes" : "spel")}</span></div></div>
+           <div class="graphe">${grapheBarres(points, { max: 100, titre: L("Pourcentage de bonnes réponses", "Percentage juiste antwoorden") })}</div>`
+        : `<div class="graphe"><div class="vide"><span class="ico">✏️</span>${L(`Pas encore de série de ${calculs(v.nombre)}.<br>Joue une partie pour voir ton score ici !`, `Nog geen reeks van ${calculs(v.nombre)}.<br>Speel een spel om je score hier te zien!`)}</div></div>`);
     }
     return `
-      ${barre(retour("versCalculs"), `<h2>Les progrès de ${esc(profil.nom)}</h2>`, avatarProfil(profil))}
+      ${barre(retour("versCalculs"), `<h2>${L(`Les progrès de ${esc(profil.nom)}`, `De vooruitgang van ${esc(profil.nom)}`)}</h2>`, avatarProfil(profil))}
       <div class="parents" style="padding-top:12px">
         <div class="puces">${pucesExo}</div>
         <div class="puces">${pucesNiveau}</div>
@@ -869,9 +878,9 @@ textarea { min-height: 150px; resize: vertical; }
 
   function vuePorte() {
     return `
-      ${barre(retour("versProfils"), `<h2>Espace parents</h2>`)}
+      ${barre(retour("versProfils"), `<h2>${L("Espace parents", "Voor ouders")}</h2>`)}
       <div class="centre"><div class="panneau porte">
-        <p class="etiquette">Pour entrer, réponds à cette question :</p>
+        <p class="etiquette">${L("Pour entrer, réponds à cette question :", "Beantwoord deze vraag om binnen te gaan:")}</p>
         <div class="question">${porte.a} × ${porte.b} = ?</div>
         <div class="ligne">${porte.choix.map(c => `<button class="gros blanc" data-a="porteRep" data-v="${c}">${c}</button>`).join("")}</div>
       </div></div>`;
@@ -882,19 +891,30 @@ textarea { min-height: 150px; resize: vertical; }
       const n = resultats.filter(r => r.profil === p.id).length;
       return `
       <div class="profil-ligne">${avatarProfil(p)}
-        <div class="qui"><span class="nom">${esc(p.nom)}</span><span class="aide">${n} partie${n > 1 ? "s" : ""}</span></div>
-        ${suppressionArmee === p.id ? "" : `<button class="btn-danger" data-a="supprimerProfil" data-id="${p.id}">Supprimer</button>`}
+        <div class="qui"><span class="nom">${esc(p.nom)}</span><span class="aide">${n} ${L("partie" + (n > 1 ? "s" : ""), n === 1 ? "spel" : "spelletjes")}</span></div>
+        ${suppressionArmee === p.id ? "" : `<button class="btn-danger" data-a="supprimerProfil" data-id="${p.id}">${L("Supprimer", "Verwijderen")}</button>`}
         ${suppressionArmee === p.id ? `
         <div class="confirmer">
-          <p>Supprimer <b>${esc(p.nom)}</b> et ${n > 1 ? "ses " + n + " parties" : n ? "sa partie" : "son profil"} ?${lienSynchro ? " Ce sera aussi effacé sur les autres appareils." : ""}</p>
-          <div class="ligne"><button class="btn-danger arme" data-a="supprimerProfil" data-id="${p.id}">Oui, supprimer</button><button class="gros blanc petit" data-a="annulerSuppression">Annuler</button></div>
+          <p>${L(`Supprimer <b>${esc(p.nom)}</b> et ${n > 1 ? "ses " + n + " parties" : n ? "sa partie" : "son profil"} ?`, `<b>${esc(p.nom)}</b> en ${n > 1 ? "de " + n + " spelletjes" : n ? "het spel" : "het profiel"} verwijderen?`)}${lienSynchro ? " Ce sera aussi effacé sur les autres appareils." : ""}</p>
+          <div class="ligne"><button class="btn-danger arme" data-a="supprimerProfil" data-id="${p.id}">${L("Oui, supprimer", "Ja, verwijderen")}</button><button class="gros blanc petit" data-a="annulerSuppression">${L("Annuler", "Annuleren")}</button></div>
         </div>` : ""}
       </div>`;
-    }).join("") || `<p class="aide">Aucun profil pour l'instant.</p>`;
+    }).join("") || `<p class="aide">${L("Aucun profil pour l'instant.", "Nog geen profielen.")}</p>`;
     return `
-      ${barre(retour("versProfils"), `<h2>Espace parents</h2>`)}
+      ${barre(retour("versProfils"), `<h2>${L("Espace parents", "Voor ouders")}</h2>`)}
       <div class="parents" style="padding-top:12px">
-        <section class="panneau">
+        ${NL ? `<section class="panneau">
+          <h3>De sommen</h3>
+          <ul class="aide">
+            <li><b>🍎 Tellen</b>: voorwerpen tellen, per 5 gerangschikt zoals op de vingers (maximaal 20), of de zwarte stippen van een domino (maximaal 12).</li>
+            <li><b>🔢 De rij</b>: het ontbrekende getal vinden (3, 4, ?).</li>
+            <li><b>🧮 Plus en min</b>: optellen en aftrekken door elkaar; de uitkomst is nooit groter dan het gekozen niveau en nooit kleiner dan nul.</li>
+            <li><b>🤔 Het juiste teken</b>: twee getallen en de uitkomst (7 ? 3 = 4), het kind tikt op + of −.</li>
+            <li><b>🎲 Mix</b>: van alles wat (tellen, de rij, plus en min, het juiste teken).</li>
+          </ul>
+          <p class="aide">Het kind antwoordt zelf door op het juiste antwoord te tikken. Na een fout verschijnt het juiste antwoord in het groen. Als het kind op het kader tikt, leest de app de som voor.</p>
+          <p class="aide">Aangeraden niveaus: <b>tot 5 of 10</b> in de 3de kleuterklas, <b>tot 20</b> in het 1ste leerjaar, <b>tot 100</b> in het 2de leerjaar.</p>
+        </section>` : `<section class="panneau">
           <h3>Les calculs</h3>
           <ul class="aide">
             <li><b>🍎 Compter</b> : des objets à compter, rangés par 5 comme sur les doigts (20 au maximum), ou les points noirs d'un domino (12 au maximum).</li>
@@ -905,15 +925,15 @@ textarea { min-height: 150px; resize: vertical; }
           </ul>
           <p class="aide">L'enfant répond seul en touchant la bonne réponse. Après une erreur, la bonne réponse s'affiche en vert. En touchant le cadre, l'app lit le calcul à voix haute.</p>
           <p class="aide">Niveaux conseillés : <b>jusqu'à 5 ou 10</b> en 3e maternelle, <b>jusqu'à 20</b> en 1re primaire, <b>jusqu'à 100</b> en 2e primaire.</p>
-        </section>
+        </section>`}
 
         <section class="panneau">
-          <h3>Profils (${profils.length}/${MAX_PROFILS})</h3>
-          <p class="aide">Supprimer un profil efface aussi tous ses résultats.</p>
+          <h3>${L("Profils", "Profielen")} (${profils.length}/${MAX_PROFILS})</h3>
+          <p class="aide">${L("Supprimer un profil efface aussi tous ses résultats.", "Als u een profiel verwijdert, worden ook alle resultaten ervan gewist.")}</p>
           ${lignesProfils}
         </section>
 
-        <section class="panneau">
+        ${NL ? "" : `<section class="panneau">
           <h3>Synchroniser l'iPad et l'iPhone</h3>
           ${lienSynchro ? `
             <p class="statut ${etatSynchro && !etatSynchro.ok ? "ko" : "ok"}">${etatSynchro && !etatSynchro.ok ? esc(etatSynchro.texte) : etatSynchro && etatSynchro.date ? "✓ Synchronisé le " + new Date(etatSynchro.date).toLocaleDateString("fr-BE") + " à " + new Date(etatSynchro.date).toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit" }) : "Connexion…"}</p>
@@ -934,11 +954,11 @@ textarea { min-height: 150px; resize: vertical; }
               <button class="gros bleu petit" data-a="connecterSynchro">Connecter</button>
             </div>
             ${etatSynchro && !etatSynchro.ok ? `<p class="statut ko">${esc(etatSynchro.texte)}</p>` : ""}`}
-        </section>
+        </section>`}
 
         <section class="panneau">
-          <h3>Sons</h3>
-          <div class="ligne"><button class="gros petit ${sonActif ? "vert" : "blanc"}" data-a="son">${sonActif ? "🔊 Sons activés" : "🔇 Sons coupés"}</button></div>
+          <h3>${L("Sons", "Geluid")}</h3>
+          <div class="ligne"><button class="gros petit ${sonActif ? "vert" : "blanc"}" data-a="son">${sonActif ? L("🔊 Sons activés", "🔊 Geluid aan") : L("🔇 Sons coupés", "🔇 Geluid uit")}</button></div>
         </section>
       </div>`;
   }
@@ -1030,22 +1050,22 @@ textarea { min-height: 150px; resize: vertical; }
     aller("fin");
     const mieux = precedent && (taux(r) > taux(precedent) || (taux(r) === taux(precedent) && r.tempsMs < precedent.tempsMs - 1000));
     const nom = profil.nom, pc = Math.round(taux(r) * 100);
-    const valeur = { valeur: pc, suffixe: " %", legende: "de bonnes réponses" };
+    const valeur = { valeur: pc, suffixe: " %", legende: L("de bonnes réponses", "juiste antwoorden") };
     let delta = "";
     if (precedent && mieux) {
-      if (pc > Math.round(taux(precedent) * 100)) delta = "+" + (pc - Math.round(taux(precedent) * 100)) + " % de bonnes réponses";
-      else delta = tempsEnMots(precedent.tempsMs - r.tempsMs) + " plus rapide !";
+      if (pc > Math.round(taux(precedent) * 100)) delta = "+" + (pc - Math.round(taux(precedent) * 100)) + L(" % de bonnes réponses", " % juiste antwoorden");
+      else delta = tempsEnMots(precedent.tempsMs - r.tempsMs) + L(" plus rapide !", " sneller!");
     }
-    if (record) grandeFete({ emoji: "🏆", titre: "Nouveau record !", sous: nom + ", tu n'as jamais fait aussi bien. Tu es une vraie star !", delta, parole: "Bravo " + nom + " ! Nouveau record !", ...valeur });
-    else if (mieux) grandeFete({ emoji: "🚀", titre: "Super " + nom + " !", sous: "Tu as fait mieux que la dernière fois. Continue comme ça !", delta, parole: "Super " + nom + " ! Tu as fait mieux que la dernière fois !", ...valeur });
-    else if (!precedent) grandeFete({ emoji: "🌟", titre: "Bravo " + nom + " !", sous: "Ta toute première partie : c'est un super début !", parole: "Bravo " + nom + " ! C'est un super début !", ...valeur });
-    else setTimeout(() => dire("Bravo " + nom + " !"), 500);
+    if (record) grandeFete({ emoji: "🏆", titre: L("Nouveau record !", "Nieuw record!"), sous: L(nom + ", tu n'as jamais fait aussi bien. Tu es une vraie star !", nom + ", zo goed heb je het nog nooit gedaan. Je bent een echte ster!"), delta, parole: L("Bravo " + nom + " ! Nouveau record !", "Bravo " + nom + "! Nieuw record!"), ...valeur });
+    else if (mieux) grandeFete({ emoji: "🚀", titre: L("Super " + nom + " !", "Super " + nom + "!"), sous: L("Tu as fait mieux que la dernière fois. Continue comme ça !", "Beter dan de vorige keer. Doe zo verder!"), delta, parole: L("Super " + nom + " ! Tu as fait mieux que la dernière fois !", "Super " + nom + "! Beter dan de vorige keer!"), ...valeur });
+    else if (!precedent) grandeFete({ emoji: "🌟", titre: L("Bravo " + nom + " !", "Bravo " + nom + "!"), sous: L("Ta toute première partie : c'est un super début !", "Je allereerste spel: een super begin!"), parole: L("Bravo " + nom + " ! C'est un super début !", "Bravo " + nom + "! Een super begin!"), ...valeur });
+    else setTimeout(() => dire(L("Bravo " + nom + " !", "Bravo " + nom + "!")), 500);
   }
   function arreter() {
     if (!partie) return;
     if (!partie.arretArme) {
       partie.arretArme = true;
-      const b = document.getElementById("btnArreter"); b.textContent = "Sûr ?"; b.style.fontSize = "18px"; b.style.background = "#ffe3e4";
+      const b = document.getElementById("btnArreter"); b.textContent = L("Sûr ?", "Zeker?"); b.style.fontSize = "18px"; b.style.background = "#ffe3e4";
       setTimeout(() => { if (partie && partie.arretArme) { partie.arretArme = false; b.textContent = "✖️"; b.style.fontSize = ""; b.style.background = ""; } }, 2500);
       return;
     }

@@ -1,5 +1,5 @@
 // Fonctionnement hors ligne : l'app est gardée en cache, la synchronisation est toujours en direct.
-const CACHE = "compte-avec-moi-20261026095644";
+const CACHE = "compte-avec-moi-20261026101229";
 const BASE = ["./", "index.html", "manifest.webmanifest", "icone-180.png", "icone-192.png", "icone-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(BASE)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith("compte-avec-moi-") && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
@@ -8,6 +8,7 @@ self.addEventListener("fetch", e => {
   // seulement l'app elle-même et ses polices ; jamais Google Apps Script (synchronisation toujours en direct)
   const garder = url.origin === self.location.origin || ["fonts.googleapis.com", "fonts.gstatic.com"].includes(url.hostname);
   if (e.request.method !== "GET" || !garder || url.pathname.endsWith("version.json")) return;
+  if (url.origin === self.location.origin && url.pathname.includes("/nl/")) return;
   // la page : d'abord le réseau (pour les mises à jour), sinon le cache
   if (e.request.mode === "navigate") {
     e.respondWith(fetch(e.request).then(r => { const c = r.clone(); caches.open(CACHE).then(k => k.put("index.html", c)); return r; }).catch(() => caches.match("index.html")));
