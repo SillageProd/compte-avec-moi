@@ -120,7 +120,7 @@ input[type="text"], input[type="url"], textarea {
 .lien-parents { background: transparent; color: var(--encre-douce); font-size: 18px; font-weight: 600; padding: 14px 18px; border-radius: 14px; }
 
 /* choix du calcul */
-.grille-exos { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 18px; max-width: 900px; width: 100%; margin: 0 auto; }
+.grille-exos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; max-width: 900px; width: 100%; margin: 0 auto; }
 .grille-exos .tuile { min-height: 180px; }
 .niveaux { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; }
 .niveaux .etiquette { margin-right: 4px; }
@@ -182,6 +182,7 @@ input[type="text"], input[type="url"], textarea {
 .verdict.ok span { color: var(--vrai); }
 .verdict.ko span { color: var(--faux); }
 @keyframes tampon { 0% { transform: scale(2); opacity: 0; } 40% { transform: scale(1); opacity: .95; } 100% { transform: scale(1); opacity: 0; } }
+.reponses.deux { grid-template-columns: 1fr 1fr; }
 .reponses { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: clamp(12px, 2.6vw, 26px); max-width: 820px; width: 100%; margin: 0 auto; }
 .rep {
   min-height: clamp(110px, 18vh, 170px); border-radius: 34px; color: var(--encre);
@@ -305,7 +306,6 @@ textarea { min-height: 150px; resize: vertical; }
   .grille-exos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .grille-exos .tuile { min-height: 140px; }
   .grille-exos .tuile .avatar { font-size: 48px; }
-  .grille-exos .tuile:last-child:nth-child(odd) { grid-column: 1 / -1; }
   .niveaux .etiquette { flex-basis: 100%; text-align: center; margin: 0; }
   .niveaux .puce { min-width: 70px; }
   .rep { border-radius: 26px; }
@@ -331,7 +331,7 @@ textarea { min-height: 150px; resize: vertical; }
 
   const MAX_PROFILS = 6;
   // Numéro de version (MAJEUR.MINEUR.CORRECTIF) : à augmenter à chaque mise en ligne
-  const VERSION = "1.1.0";
+  const VERSION = "1.3.0";
   let versionEnLigne = null;   // version publiée sur le site, lue dans version.json
   const ANIMAUX = ["🦁", "🐸", "🐼", "🦊", "🐰", "🐙", "🐢", "🦄", "🐶", "🐱", "🐵", "🐧", "🐨", "🐯", "🦖", "🐝"];
   const COULEURS = ["#f2545b", "#ff8a3d", "#ffb627", "#22b573", "#3aa8e0", "#7176d6", "#d465c2"];
@@ -342,7 +342,8 @@ textarea { min-height: 150px; resize: vertical; }
     { id: "suite", ico: "🔢", nom: "La suite", sous: "Quel nombre manque\u00a0?", c: "#3aa8e0" },
     { id: "plus", ico: "➕", nom: "Plus", sous: "Les additions", c: "#7176d6" },
     { id: "moins", ico: "➖", nom: "Moins", sous: "Les soustractions", c: "#d465c2" },
-    { id: "melange", ico: "🎲", nom: "Mélange", sous: "Un peu de tout", c: "#ffb627" }
+    { id: "signe", ico: "🤔", nom: "Plus ou moins\u00a0?", sous: "Trouve le bon signe", c: "#22b573" },
+    { id: "melange", ico: "🎲", nom: "Mélange", sous: "Plus et moins mélangés", c: "#ffb627" }
   ];
   const exoDe = id => EXOS.find(e => e.id === id) || EXOS[2];
   const NIVEAUX = [5, 10, 20, 100];        // « jusqu'à … »
@@ -521,10 +522,15 @@ textarea { min-height: 150px; resize: vertical; }
   }
 
   // ---------- fabrique de calculs ----------
-  // Chaque calcul : ce qu'on montre, ce qu'on dit, la bonne réponse et trois réponses au choix.
+  // Chaque calcul : ce qu'on montre, ce qu'on dit, la bonne réponse et les réponses au choix (trois, ou + et − pour « signe »).
   function nouveauCalcul(exo, niveau) {
-    if (exo === "melange") exo = ["compter", "suite", "plus", "moins"][hasard(0, 3)];
+    if (exo === "melange") exo = hasard(0, 1) ? "plus" : "moins";
     let q;
+    if (exo === "signe") {
+      // deux nombres et le résultat : l'enfant choisit + ou −
+      const c = nouveauCalcul(hasard(0, 1) ? "plus" : "moins", niveau);
+      return { exo, a: c.a, b: c.b, res: c.rep, rep: c.signe, choix: ["+", "−"], parole: c.a + " … " + c.b + " égale " + c.rep + ". Plus ou moins ?", cle: c.cle };
+    }
     if (exo === "compter") {
       const n = hasard(1, Math.min(niveau, MAX_OBJETS)), [objet, nom] = OBJETS[hasard(0, OBJETS.length - 1)];
       q = { exo, n, objet, rep: n, parole: "Combien y a-t-il de " + nom + " ?", cle: "c" + n };
@@ -562,6 +568,7 @@ textarea { min-height: 150px; resize: vertical; }
       }
       return { html: `<span class="objets">${blocs.join("")}</span>`, objets: true };
     }
+    if (q.exo === "signe") return { html: `${q.a} ${trou} ${q.b} = ${q.res}`, texte: `${q.a} + ${q.b} = ${q.res}` };
     if (q.exo === "suite") return { html: q.nombres.map((n, i) => `<span class="suite">${i === q.trou ? trou : n}</span>`).join(""), texte: q.nombres.join("    ") };
     return { html: `${q.a} ${q.signe} ${q.b} = ${trou}`, texte: `${q.a} ${q.signe} ${q.b} = ${q.rep > 9 ? "00" : "0"}` };
   }
@@ -879,9 +886,10 @@ textarea { min-height: 150px; resize: vertical; }
             <li><b>🍎 Compter</b> : des objets à compter, rangés par 5 comme sur les doigts (20 au maximum).</li>
             <li><b>🔢 La suite</b> : trouver le nombre qui manque (3, 4, ?).</li>
             <li><b>➕ Plus</b> et <b>➖ Moins</b> : le résultat ne dépasse jamais le niveau choisi et ne descend jamais sous zéro.</li>
-            <li><b>🎲 Mélange</b> : un peu de tout.</li>
+            <li><b>🤔 Plus ou moins ?</b> : deux nombres et le résultat (7 ? 3 = 4), l'enfant touche + ou −.</li>
+            <li><b>🎲 Mélange</b> : des additions et des soustractions, mélangées.</li>
           </ul>
-          <p class="aide">L'enfant répond seul en touchant la bonne réponse parmi trois. Après une erreur, la bonne réponse s'affiche en vert. En touchant le cadre, l'app lit le calcul à voix haute.</p>
+          <p class="aide">L'enfant répond seul en touchant la bonne réponse. Après une erreur, la bonne réponse s'affiche en vert. En touchant le cadre, l'app lit le calcul à voix haute.</p>
           <p class="aide">Niveaux conseillés : <b>jusqu'à 5 ou 10</b> en 3e maternelle, <b>jusqu'à 20</b> en 1re primaire, <b>jusqu'à 100</b> en 2e primaire.</p>
         </section>
 
@@ -968,11 +976,12 @@ textarea { min-height: 150px; resize: vertical; }
     el.innerHTML = dessinCalcul(q, reponse).html;
     if (reponse != null) return;
     el.classList.remove("entre"); void el.offsetWidth; el.classList.add("entre");
-    q.choix.forEach((v, i) => { const b = document.getElementById("rep" + i); b.textContent = v; b.className = "rep"; });
+    [0, 1, 2].forEach(i => { const b = document.getElementById("rep" + i); b.textContent = q.choix[i] ?? ""; b.className = "rep"; b.hidden = i >= q.choix.length; });
+    app.querySelector(".reponses").classList.toggle("deux", q.choix.length === 2);
     const c = document.getElementById("compteur"); if (c) c.textContent = (partie.index + 1) + " / " + partie.total;
   }
   function repondre(i) {
-    if (!partie || partie.occupe) return;
+    if (!partie || partie.occupe || i >= partie.q.choix.length) return;
     partie.occupe = true;
     const q = partie.q, juste = q.choix[i] === q.rep;
     juste ? partie.justes++ : partie.faux++;

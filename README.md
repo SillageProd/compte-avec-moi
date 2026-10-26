@@ -4,9 +4,9 @@ Petite app pour aider les enfants (5 à 8 ans) à compter et à calculer, sœur 
 Elle s'installe sur iPad et iPhone depuis Safari : **Partager → Sur l'écran d'accueil**.
 
 - Jusqu'à 6 profils, sans mot de passe.
-- Cinq jeux : 🍎 Compter, 🔢 La suite, ➕ Plus, ➖ Moins, 🎲 Mélange ; niveau « jusqu'à 5, 10, 20 ou 100 ».
+- Six jeux : 🍎 Compter, 🔢 La suite, ➕ Plus, ➖ Moins, 🤔 Plus ou moins ? (trouver le signe), 🎲 Mélange (additions et soustractions mélangées) ; niveau « jusqu'à 5, 10, 20 ou 100 ».
 - Des séries de 5 à 50 calculs, sans chrono.
-- L'enfant répond seul en touchant la bonne réponse parmi trois ; après une erreur, la bonne réponse s'affiche en vert.
+- L'enfant répond seul en touchant la bonne réponse ; après une erreur, la bonne réponse s'affiche en vert.
 - En touchant le cadre, l'app lit le calcul à voix haute.
 - Les résultats et le graphique des progrès (par jeu et par niveau) restent sur l'appareil.
 
