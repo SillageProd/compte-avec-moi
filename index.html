@@ -348,7 +348,7 @@ textarea { min-height: 150px; resize: vertical; }
 
   const MAX_PROFILS = 6;
   // Numéro de version (MAJEUR.MINEUR.CORRECTIF) : à augmenter à chaque mise en ligne
-  const VERSION = "1.8.0";
+  const VERSION = "1.8.1";
   let versionEnLigne = null;   // version publiée sur le site, lue dans version.json
   const ANIMAUX = ["🦁", "🐸", "🐼", "🦊", "🐰", "🐙", "🐢", "🦄", "🐶", "🐱", "🐵", "🐧", "🐨", "🐯", "🦖", "🐝"];
   const COULEURS = ["#f2545b", "#ff8a3d", "#ffb627", "#22b573", "#3aa8e0", "#7176d6", "#d465c2"];
@@ -369,7 +369,9 @@ textarea { min-height: 150px; resize: vertical; }
     ? [["🍎", "appels"], ["⭐", "sterren"], ["🐞", "lieveheersbeestjes"], ["🎈", "ballonnen"], ["🐟", "vissen"], ["🌸", "bloemen"], ["🚗", "auto's"], ["🍓", "aardbeien"], ["🐥", "kuikens"], ["🍪", "koekjes"]]
     : [["🍎", "pommes"], ["⭐", "étoiles"], ["🐞", "coccinelles"], ["🎈", "ballons"], ["🐟", "poissons"], ["🌸", "fleurs"], ["🚗", "voitures"], ["🍓", "fraises"], ["🐥", "poussins"], ["🍪", "biscuits"]];
 
-  let profils = lire("profils", []);
+  // un profil sans prénom (ligne abîmée dans le Google Sheet) est ignoré
+  const profilValide = p => p && p.id != null && p.id !== "" && p.nom != null && String(p.nom).trim() !== "" && String(p.nom) !== "undefined";
+  let profils = lire("profils", []).filter(profilValide);
   let resultats = lire("resultats", []);
   let choix = lire("choix", {});                   // dernier calcul et niveau choisis, par profil
   let sonActif = lire("son", true);
@@ -624,8 +626,8 @@ textarea { min-height: 150px; resize: vertical; }
 
   // ---------- synchronisation entre appareils (Google Apps Script) ----------
   const CODE_SYNCHRO = "/* Compte avec moi - synchronisation des profils et des resultats entre l'iPad et l'iPhone.\n   A coller dans un nouveau projet sur script.google.com, en remplacant tout le contenu.\n   Les donnees vont dans leurs propres onglets (\"Maths - ...\") : celles de Lis avec moi ne sont jamais touchees. */\n\n// Lien du Google Sheet a utiliser (par exemple celui de Lis avec moi), entre les guillemets.\n// Laisser vide si ce code est colle dans Extensions > Apps Script du Google Sheet lui-meme.\nvar LIEN_SHEET = \"\";\nvar PREFIXE = \"Maths - \";\n\nvar ONGLETS = {\n  Profils: [\"id\", \"nom\", \"animal\", \"couleur\"],\n  Resultats: [\"id\", \"profil\", \"mode\", \"duree\", \"nombre\", \"exo\", \"niveau\", \"justes\", \"faux\", \"total\", \"tempsMs\", \"date\"],\n  Supprimes: [\"id\"]\n};\n\nfunction feuille(nom) {\n  var ss = LIEN_SHEET ? SpreadsheetApp.openByUrl(LIEN_SHEET) : SpreadsheetApp.getActiveSpreadsheet();\n  var f = ss.getSheetByName(PREFIXE + nom);\n  if (!f) {\n    f = ss.insertSheet(PREFIXE + nom);\n    f.getRange(\"A:Z\").setNumberFormat(\"@\");\n    f.appendRow(ONGLETS[nom]);\n  }\n  return f;\n}\n\nfunction lireTout(nom) {\n  var valeurs = feuille(nom).getDataRange().getValues();\n  var titres = valeurs.shift();\n  var liste = [];\n  for (var i = 0; i < valeurs.length; i++) {\n    if (valeurs[i][0] === \"\") continue;\n    var o = {};\n    for (var j = 0; j < titres.length; j++) o[titres[j]] = valeurs[i][j];\n    liste.push(o);\n  }\n  return liste;\n}\n\nfunction etat() {\n  var sup = lireTout(\"Supprimes\");\n  var ids = [];\n  for (var i = 0; i < sup.length; i++) ids.push(String(sup[i].id));\n  return { ok: true, profils: lireTout(\"Profils\"), resultats: lireTout(\"Resultats\"), supprimes: ids };\n}\n\nfunction repondre(o) {\n  return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);\n}\n\nfunction doGet() {\n  return repondre(etat());\n}\n\nfunction ajouter(nom, liste) {\n  if (!liste || !liste.length) return;\n  var f = feuille(nom);\n  var existants = lireTout(nom);\n  var deja = {};\n  for (var i = 0; i < existants.length; i++) deja[String(existants[i].id)] = true;\n  var colonnes = ONGLETS[nom];\n  var lignes = [];\n  for (var k = 0; k < liste.length; k++) {\n    var o = liste[k];\n    if (deja[String(o.id)]) continue;\n    var ligne = [];\n    for (var c = 0; c < colonnes.length; c++) {\n      var v = o[colonnes[c]];\n      ligne.push(v === null || v === undefined ? \"\" : String(v));\n    }\n    lignes.push(ligne);\n    deja[String(o.id)] = true;\n  }\n  if (lignes.length) f.getRange(f.getLastRow() + 1, 1, lignes.length, colonnes.length).setValues(lignes);\n}\n\nfunction retirer(ids) {\n  if (!ids || !ids.length) return;\n  var aRetirer = {};\n  for (var i = 0; i < ids.length; i++) aRetirer[String(ids[i])] = true;\n  var f = feuille(\"Resultats\");\n  var valeurs = f.getDataRange().getValues();\n  for (var l = valeurs.length - 1; l >= 1; l--) {\n    if (aRetirer[String(valeurs[l][0])]) f.deleteRow(l + 1);\n  }\n}\n\nfunction doPost(e) {\n  var verrou = LockService.getScriptLock();\n  verrou.waitLock(20000);\n  try {\n    var d = JSON.parse(e.postData.contents);\n    var sup = [];\n    var ids = d.supprimes || [];\n    for (var i = 0; i < ids.length; i++) sup.push({ id: ids[i] });\n    ajouter(\"Profils\", d.profils);\n    ajouter(\"Resultats\", d.resultats);\n    ajouter(\"Supprimes\", sup);\n    retirer(d.retirer);\n    return repondre(etat());\n  } finally {\n    verrou.releaseLock();\n  }\n}\n";
-  const normProfil = o => ({ id: String(o.id), nom: String(o.nom), animal: String(o.animal), couleur: String(o.couleur) });
   const vide = v => v === "" || v == null;
+  const normProfil = o => ({ id: String(o.id), nom: String(o.nom), animal: vide(o.animal) ? ANIMAUX[0] : String(o.animal), couleur: vide(o.couleur) ? COULEURS[0] : String(o.couleur) });
   const normResultat = o => ({
     id: String(o.id), profil: String(o.profil), mode: String(o.mode),
     duree: vide(o.duree) ? null : Number(o.duree), nombre: vide(o.nombre) ? null : Number(o.nombre),
@@ -636,7 +638,7 @@ textarea { min-height: 150px; resize: vertical; }
   function fusionner(srv) {
     const sup = new Set([...supprimes, ...srv.supprimes.map(String)]);
     const P = new Map(), R = new Map();
-    [...srv.profils.map(normProfil), ...profils].forEach(p => { if (!P.has(p.id)) P.set(p.id, p); });
+    [...srv.profils.filter(profilValide).map(normProfil), ...profils].forEach(p => { if (!P.has(p.id)) P.set(p.id, p); });
     [...srv.resultats.map(normResultat), ...resultats].forEach(r => { if (!R.has(r.id)) R.set(r.id, r); });
     // Même prénom créé sur deux appareils : on garde le profil le plus ancien et on regroupe les résultats
     const alias = {}, garde = {};

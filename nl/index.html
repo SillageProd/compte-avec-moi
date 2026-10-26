@@ -348,7 +348,7 @@ textarea { min-height: 150px; resize: vertical; }
 
   const MAX_PROFILS = 6;
   // Numéro de version (MAJEUR.MINEUR.CORRECTIF) : à augmenter à chaque mise en ligne
-  const VERSION = "1.8.0";
+  const VERSION = "1.8.1";
   let versionEnLigne = null;   // version publiée sur le site, lue dans version.json
   const ANIMAUX = ["🦁", "🐸", "🐼", "🦊", "🐰", "🐙", "🐢", "🦄", "🐶", "🐱", "🐵", "🐧", "🐨", "🐯", "🦖", "🐝"];
   const COULEURS = ["#f2545b", "#ff8a3d", "#ffb627", "#22b573", "#3aa8e0", "#7176d6", "#d465c2"];
@@ -369,7 +369,9 @@ textarea { min-height: 150px; resize: vertical; }
     ? [["🍎", "appels"], ["⭐", "sterren"], ["🐞", "lieveheersbeestjes"], ["🎈", "ballonnen"], ["🐟", "vissen"], ["🌸", "bloemen"], ["🚗", "auto's"], ["🍓", "aardbeien"], ["🐥", "kuikens"], ["🍪", "koekjes"]]
     : [["🍎", "pommes"], ["⭐", "étoiles"], ["🐞", "coccinelles"], ["🎈", "ballons"], ["🐟", "poissons"], ["🌸", "fleurs"], ["🚗", "voitures"], ["🍓", "fraises"], ["🐥", "poussins"], ["🍪", "biscuits"]];
 
-  let profils = lire("profils", []);
+  // un profil sans prénom (ligne abîmée dans le Google Sheet) est ignoré
+  const profilValide = p => p && p.id != null && p.id !== "" && p.nom != null && String(p.nom).trim() !== "" && String(p.nom) !== "undefined";
+  let profils = lire("profils", []).filter(profilValide);
   let resultats = lire("resultats", []);
   let choix = lire("choix", {});                   // dernier calcul et niveau choisis, par profil
   let sonActif = lire("son", true);
@@ -624,8 +626,8 @@ textarea { min-height: 150px; resize: vertical; }
 
   // ---------- synchronisation entre appareils (Google Apps Script) ----------
   const CODE_SYNCHRO = "";
-  const normProfil = o => ({ id: String(o.id), nom: String(o.nom), animal: String(o.animal), couleur: String(o.couleur) });
   const vide = v => v === "" || v == null;
+  const normProfil = o => ({ id: String(o.id), nom: String(o.nom), animal: vide(o.animal) ? ANIMAUX[0] : String(o.animal), couleur: vide(o.couleur) ? COULEURS[0] : String(o.couleur) });
   const normResultat = o => ({
     id: String(o.id), profil: String(o.profil), mode: String(o.mode),
     duree: vide(o.duree) ? null : Number(o.duree), nombre: vide(o.nombre) ? null : Number(o.nombre),
@@ -636,7 +638,7 @@ textarea { min-height: 150px; resize: vertical; }
   function fusionner(srv) {
     const sup = new Set([...supprimes, ...srv.supprimes.map(String)]);
     const P = new Map(), R = new Map();
-    [...srv.profils.map(normProfil), ...profils].forEach(p => { if (!P.has(p.id)) P.set(p.id, p); });
+    [...srv.profils.filter(profilValide).map(normProfil), ...profils].forEach(p => { if (!P.has(p.id)) P.set(p.id, p); });
     [...srv.resultats.map(normResultat), ...resultats].forEach(r => { if (!R.has(r.id)) R.set(r.id, r); });
     // Même prénom créé sur deux appareils : on garde le profil le plus ancien et on regroupe les résultats
     const alias = {}, garde = {};
