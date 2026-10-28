@@ -14,27 +14,46 @@ var ONGLETS = {
 };
 
 function feuille(nom) {
+  if (!ONGLETS[nom]) throw new Error("Choisir doGet dans la liste avant de cliquer sur Executer.");
   var ss = LIEN_SHEET ? SpreadsheetApp.openByUrl(LIEN_SHEET) : SpreadsheetApp.getActiveSpreadsheet();
   var f = ss.getSheetByName(PREFIXE + nom);
   if (!f) {
     f = ss.insertSheet(PREFIXE + nom);
     f.getRange("A:Z").setNumberFormat("@");
-    f.appendRow(ONGLETS[nom]);
+  }
+  // la premiere ligne doit toujours etre celle des titres (id, nom, ...) : on la remet si elle manque
+  if (f.getLastRow() === 0 || String(f.getRange(1, 1).getValue()) !== "id") {
+    if (f.getLastRow() > 0) f.insertRowBefore(1);
+    f.getRange(1, 1, 1, ONGLETS[nom].length).setValues([ONGLETS[nom]]);
   }
   return f;
 }
 
+// Les colonnes sont lues dans l'ordre fixe de ONGLETS ; une meme ligne (meme id) n'est rendue qu'une fois.
 function lireTout(nom) {
   var valeurs = feuille(nom).getDataRange().getValues();
-  var titres = valeurs.shift();
-  var liste = [];
-  for (var i = 0; i < valeurs.length; i++) {
-    if (valeurs[i][0] === "") continue;
+  var colonnes = ONGLETS[nom];
+  var liste = [], vus = {};
+  for (var i = 1; i < valeurs.length; i++) {
+    var id = String(valeurs[i][0]);
+    if (id === "" || vus[id]) continue;
+    vus[id] = true;
     var o = {};
-    for (var j = 0; j < titres.length; j++) o[titres[j]] = valeurs[i][j];
+    for (var j = 0; j < colonnes.length; j++) o[colonnes[j]] = valeurs[i][j];
     liste.push(o);
   }
   return liste;
+}
+
+// A executer une fois si un onglet "Maths - ..." contient des lignes en double : garde une seule ligne par id.
+function nettoyer() {
+  for (var nom in ONGLETS) {
+    var f = feuille(nom), lignes = lireTout(nom), colonnes = ONGLETS[nom];
+    if (f.getLastRow() > 1) f.getRange(2, 1, f.getLastRow() - 1, f.getLastColumn()).clearContent();
+    if (lignes.length) f.getRange(2, 1, lignes.length, colonnes.length).setValues(lignes.map(function (o) {
+      return colonnes.map(function (c) { return o[c] === null || o[c] === undefined ? "" : String(o[c]); });
+    }));
+  }
 }
 
 function etat() {
