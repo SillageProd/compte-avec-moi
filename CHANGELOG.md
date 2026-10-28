@@ -2,6 +2,7 @@
 
 Numérotation MAJEUR.MINEUR.CORRECTIF : MINEUR pour une nouveauté, CORRECTIF pour une correction.
 
+- **1.8.2** — Synchronisation : en cas d'échec, l'Espace parents affiche la raison exacte (pour trouver ce qui bloque).
 - **1.8.1** — Correction : un profil abîmé venant de la synchronisation (sans prénom) ne s'affiche plus en « undefined ».
 - **1.8.0** — Nouveau jeu « Comparer » (FR et NL) : deux nombres ou deux dominos, l'enfant choisit < (plus petit), = (égal) ou > (plus grand) ; aussi dans Mélange.
 - **1.7.0** — Synchronisation : peut utiliser le même Google Sheet que Lis avec moi, dans des onglets séparés « Maths - … ».

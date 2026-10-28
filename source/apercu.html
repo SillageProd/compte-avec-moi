@@ -336,7 +336,7 @@ textarea { min-height: 150px; resize: vertical; }
 
   const MAX_PROFILS = 6;
   // Numéro de version (MAJEUR.MINEUR.CORRECTIF) : à augmenter à chaque mise en ligne
-  const VERSION = "1.8.1";
+  const VERSION = "1.8.2";
   let versionEnLigne = null;   // version publiée sur le site, lue dans version.json
   const ANIMAUX = ["🦁", "🐸", "🐼", "🦊", "🐰", "🐙", "🐢", "🦄", "🐶", "🐱", "🐵", "🐧", "🐨", "🐯", "🦖", "🐝"];
   const COULEURS = ["#f2545b", "#ff8a3d", "#ffb627", "#22b573", "#3aa8e0", "#7176d6", "#d465c2"];
@@ -643,8 +643,13 @@ textarea { min-height: 150px; resize: vertical; }
     const rep = corps
       ? await fetch(lienSynchro, { method: "POST", body: JSON.stringify(corps), redirect: "follow" })
       : await fetch(lienSynchro + "?t=" + Date.now(), { cache: "no-store", redirect: "follow" });
-    const d = await rep.json();
-    if (!d || !d.ok) throw new Error("réponse");
+    // en cas d'échec, on garde la raison exacte pour l'afficher dans l'Espace parents
+    if (!rep.ok) throw new Error("Google répond " + rep.status);
+    const texte = await rep.text();
+    let d;
+    try { d = JSON.parse(texte); }
+    catch (e) { throw new Error("Google ne renvoie pas les données : « " + texte.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 140) + " »"); }
+    if (!d || !d.ok || !Array.isArray(d.profils)) throw new Error("Réponse inattendue : " + texte.slice(0, 140));
     return d;
   }
   // ---------- tri des résultats ----------
@@ -708,7 +713,7 @@ textarea { min-height: 150px; resize: vertical; }
       if (profil) profil = profils.find(p => p.id === (alias[profil.id] || profil.id)) || null;
       etatSynchro = { ok: true, date: new Date().toISOString(), texte: "" };
     } catch (e) {
-      etatSynchro = { ok: false, date: etatSynchro && etatSynchro.date, texte: "Synchronisation impossible pour l'instant. Les résultats sont gardés sur cet appareil et seront envoyés plus tard." };
+      etatSynchro = { ok: false, date: etatSynchro && etatSynchro.date, texte: "Synchronisation impossible pour l'instant. Les résultats sont gardés sur cet appareil et seront envoyés plus tard. (Détail : " + (e && e.message || e) + ")" };
     } finally {
       ecrire("etatSynchro", etatSynchro);
       synchroEnCours = false;
