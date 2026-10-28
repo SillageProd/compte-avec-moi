@@ -75,13 +75,18 @@ function ajouter(nom, liste) {
   if (!liste || !liste.length) return;
   var f = feuille(nom);
   var existants = lireTout(nom);
-  var deja = {};
+  var deja = {}, supprime = {};
   for (var i = 0; i < existants.length; i++) deja[String(existants[i].id)] = true;
+  // un profil supprime (et ses parties) n'est jamais remis dans le Sheet
+  if (nom !== "Supprimes") {
+    var sup = lireTout("Supprimes");
+    for (var s = 0; s < sup.length; s++) supprime[String(sup[s].id)] = true;
+  }
   var colonnes = ONGLETS[nom];
   var lignes = [];
   for (var k = 0; k < liste.length; k++) {
     var o = liste[k];
-    if (deja[String(o.id)]) continue;
+    if (deja[String(o.id)] || supprime[String(o.id)] || (nom === "Resultats" && supprime[String(o.profil)])) continue;
     var ligne = [];
     for (var c = 0; c < colonnes.length; c++) {
       var v = o[colonnes[c]];

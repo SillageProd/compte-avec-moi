@@ -2,6 +2,7 @@
 
 Numérotation MAJEUR.MINEUR.CORRECTIF : MINEUR pour une nouveauté, CORRECTIF pour une correction.
 
+- **1.8.4** — Script de synchronisation : un profil supprimé (et ses parties) n'est plus jamais remis dans le Sheet par un autre appareil.
 - **1.8.3** — Script de synchronisation corrigé : il remet la ligne de titres si elle manque, n'ajoute plus les profils en double et ignore les doublons existants (nouvelle fonction « nettoyer »). C'est ce qui empêchait l'iPhone et l'iPad de voir les mêmes profils.
 - **1.8.2** — Synchronisation : en cas d'échec, l'Espace parents affiche la raison exacte (pour trouver ce qui bloque).
 - **1.8.1** — Correction : un profil abîmé venant de la synchronisation (sans prénom) ne s'affiche plus en « undefined ».
